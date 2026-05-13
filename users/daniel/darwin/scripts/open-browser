@@ -1,0 +1,3 @@
+#!/usr/bin/env bash --login
+
+/Applications/Firefox.app/Contents/MacOS/firefox & disown

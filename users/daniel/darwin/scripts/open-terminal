@@ -1,0 +1,6 @@
+#!/usr/bin/env bash --login
+
+
+if ! alacritty msg create-window -e fish; then
+    alacritty -e fish & disown
+fi
