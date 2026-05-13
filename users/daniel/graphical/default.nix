@@ -26,7 +26,7 @@ in {
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
       eog chromium code-cursor
-      signal-desktop-bin caprine zed-alias
+      signal-desktop caprine zed-alias
     ] else [];
 
     programs.widevine.enable = pkgs.stdenv.isLinux;

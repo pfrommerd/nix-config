@@ -12,9 +12,6 @@
 
     # Hardware configuration:
     hardware.cpu.amd.updateMicrocode = config.hardware.enableRedistributableFirmware;
-    services.xserver.videoDrivers = ["nvidia"];
-    services.displayManager.gdm.autoSuspend = lib.mkDefault false;
-
     hardware.graphics.enable = true;
     hardware.nvidia = {
       modesetting.enable = true;
@@ -24,6 +21,8 @@
       nvidiaSettings = true;
       package = config.boot.kernelPackages.nvidiaPackages.stable;
     };
+    services.xserver.videoDrivers = ["nvidia"];
+    services.displayManager.gdm.autoSuspend = lib.mkDefault false;
 
     # Add the drivers to nix-ld so unpatched cuda-libraries can find libcuda.so
     programs.nix-ld.libraries = [
@@ -38,16 +37,16 @@
     boot.loader.systemd-boot.enable = true;
     boot.loader.efi.canTouchEfiVariables = true;
 
-    fileSystems."/" =
-      { device = "/dev/disk/by-uuid/7707dca9-00e3-4a4d-a469-a9514ee3bed4";
-        fsType = "ext4";
-      };
+    fileSystems."/" = {
+      device = "/dev/disk/by-uuid/7707dca9-00e3-4a4d-a469-a9514ee3bed4";
+      fsType = "ext4";
+    };
 
-    fileSystems."/boot" =
-      { device = "/dev/disk/by-uuid/1A8B-D2B8";
-        fsType = "vfat";
-        options = [ "fmask=0077" "dmask=0077" ];
-      };
+    fileSystems."/boot" = {
+      device = "/dev/disk/by-uuid/1A8B-D2B8";
+      fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
+    };
 
     swapDevices = [{
       device = "/var/lib/swapfile";

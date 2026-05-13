@@ -27,6 +27,23 @@
     users.daniel.sudo = true;
   };
 
+  ececheira = {
+    system = "x86_64-linux";
+
+    imports = [
+      ./modules/hardware/ececheira.nix
+      ./modules/machines/ececheira.nix
+      ./users/daniel
+    ];
+
+    hardware.ececheira.enable = true;
+    machines.ececheira.enable = true;
+
+    users.daniel.enable = true;
+    users.daniel.graphical = true;
+    users.daniel.sudo = true;
+  };
+
   asahi = {
     system = "aarch64-linux";
 
