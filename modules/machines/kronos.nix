@@ -8,6 +8,11 @@
       in lib.mkIf cfg.enable {
     hardware.nvidia-container-toolkit.enable = true;
     virtualisation.docker.enable = true;
+    virtualisation.docker.daemon.settings = {
+      features = {
+        cdi = true;
+      };
+    };
 
     distro = {
       common.enable = true;
@@ -34,7 +39,7 @@
       '';
     };
     services.ollama = {
-      enable = true;
+      enable = false;
       package = pkgs.ollama-cuda;
       loadModels = ["nishtahir/zeta:7b" "gpt-oss:20b"];
       syncModels = true;
@@ -43,7 +48,7 @@
       enable = true;
       port = 11435;
       environment = {
-        OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+        # OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
       };
     };
     distro.common.proxy = {

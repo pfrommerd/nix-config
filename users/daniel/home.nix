@@ -8,9 +8,8 @@
 
   config = {
     home.packages = with pkgs; [
-      # python tooling
-      uv
       # general tooling
+      uv devcontainer
       gnumake cmake clang clang-tools
       # general utilities
       unzip zip gnutar wget curl tree killall htop file

@@ -63,11 +63,9 @@
 
     # Caddy proxy and TLS configuration
     # install our custom root certificate
-
-    # age.secrets.root-crt.file = ../secrets/root.crt.age;
-    # age.secrets.root-key.file = ../secrets/root.key.age;
-    # security.pki.certificateFiles = [ config.age.secrets.root-crt.path ];
-
+    age.secrets.root-crt.file = ../secrets/root-crt.age;
+    age.secrets.root-key.file = ../secrets/root-key.age;
+    security.pki.certificateFiles = [ ../secrets/root.crt ];
     services.caddy = {
       enable = cfg.proxy != {};
       globalConfig = ''
