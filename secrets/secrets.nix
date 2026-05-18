@@ -5,6 +5,6 @@ let daniel = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILjasIJq1MDgp06wRwV1rfx+flR5BY
 in {
    "daniel-passwd.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
    "daniel-hf-token.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
-   "root.key.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
-   "root.crt.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
+   "root-key.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
+   "root-crt.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
 }
