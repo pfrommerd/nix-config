@@ -22,12 +22,14 @@ in {
   };
 
   config = lib.mkIf config.graphical {
-    home.packages = with pkgs; if pkgs.stdenv.isLinux then [
+    home.packages = with pkgs; (if pkgs.stdenv.isLinux then [
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
       eog chromium code-cursor
       signal-desktop caprine zed-alias
-    ] else [];
+    ] else []) ++ (if pkgs.stdenv.isLinux && pkgs.stdenv.isx86_64 then [
+      discord spotify slack
+    ] else []);
 
     programs.widevine.enable = pkgs.stdenv.isLinux;
     programs.firefox.enable = true;

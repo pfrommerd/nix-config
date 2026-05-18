@@ -91,29 +91,41 @@ in
           };
         }
       ];
-      shortcuts = [
+      shortcuts = let mkopts = mod: [
         # open terminal + browser + launcher
-        { key = "Super+Return"; action = mkRON "enum" { value = [ "cosmic-term" ]; variant = "Spawn"; }; }
-        { key = "Super+C"; action = mkRON "enum" { value = [ "firefox" ]; variant = "Spawn"; }; }
-        { key = "Super"; action = mkRON "enum" "Disable"; }
-        { key = "Super+D"; action = mkRON "enum" { variant = "Spawn"; value = [ "cosmic-launcher" ];};}
+        { key = "${mod}+Return"; action = mkRON "enum" { value = [ "cosmic-term" ]; variant = "Spawn"; }; }
+        { key = "${mod}+C"; action = mkRON "enum" { value = [ "firefox" ]; variant = "Spawn"; }; }
+        { key = "${mod}"; action = mkRON "enum" "Disable"; }
+        { key = "${mod}+D"; action = mkRON "enum" { variant = "Spawn"; value = [ "cosmic-launcher" ];};}
         # window management
-        { key = "Super+Q"; action = mkRON "enum" "Close"; }
+        { key = "${mod}+Q"; action = mkRON "enum" "Close"; }
         # window navigation
-        { key = "Super+H"; action = mkRON "enum" "Disable"; }
-        { key = "Super+Shift+H"; action = mkRON "enum" "Disable"; }
-        { key = "Super+Ctrl+Alt+H"; action = mkRON "enum" "Disable"; }
-        { key = "Super+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "Super+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "Super+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "Super+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "Super+J"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Left")]; }; }
-        { key = "Super+Shift+J"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Left")]; }; }
-        { key = "Super+K"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Down")]; }; }
-        { key = "Super+Shift+K"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Down")]; }; }
-        { key = "Super+L"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Up")]; }; }
-        { key = "Super+Shift+L"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Up")]; }; }
-      ];
+        { key = "${mod}+H"; action = mkRON "enum" "Disable"; }
+        { key = "${mod}+Shift+H"; action = mkRON "enum" "Disable"; }
+        { key = "${mod}+Ctrl+Alt+H"; action = mkRON "enum" "Disable"; }
+        { key = "${mod}+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
+        { key = "${mod}+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
+        { key = "${mod}+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
+        { key = "${mod}+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
+        { key = "${mod}+J"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Left")]; }; }
+        { key = "${mod}+Shift+J"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Left")]; }; }
+        { key = "${mod}+K"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Down")]; }; }
+        { key = "${mod}+Shift+K"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Down")]; }; }
+        { key = "${mod}+L"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Up")]; }; }
+        { key = "${mod}+Shift+L"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Up")]; }; }
+        # workspace expose
+        { key = "${mod}+W"; action = mkRON "enum" { variant = "System"; value = [(mkRON "enum" "WorkspaceOverview")];}; }
+        # workspace navigation
+        { key = "${mod}+1"; action = mkRON "enum" { variant = "Workspace"; value = [1];}; }
+        { key = "${mod}+2"; action = mkRON "enum" { variant = "Workspace"; value = [2];}; }
+        { key = "${mod}+3"; action = mkRON "enum" { variant = "Workspace"; value = [3];}; }
+        { key = "${mod}+4"; action = mkRON "enum" { variant = "Workspace"; value = [4];}; }
+        { key = "${mod}+5"; action = mkRON "enum" { variant = "Workspace"; value = [5];}; }
+        { key = "${mod}+6"; action = mkRON "enum" { variant = "Workspace"; value = [6];}; }
+        { key = "${mod}+7"; action = mkRON "enum" { variant = "Workspace"; value = [7];}; }
+        { key = "${mod}+8"; action = mkRON "enum" { variant = "Workspace"; value = [8];}; }
+        { key = "${mod}+9"; action = mkRON "enum" { variant = "Workspace"; value = [9];}; }
+      ]; in (mkopts "Super") ++ (mkopts "Alt");
     };
   };
 }

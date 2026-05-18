@@ -41,6 +41,7 @@
 
     users.daniel.enable = true;
     users.daniel.graphical = true;
+    users.daniel.cosmic = true;
     users.daniel.sudo = true;
   };
 
