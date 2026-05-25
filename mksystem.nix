@@ -39,7 +39,6 @@ in systemFunc rec {
         package = pkgs.nixVersions.latest;
         registry.self.flake = self;
       };
-      hardware.enableRedistributableFirmware = true;
     }
     # Agenix module and cli
     agenix.nixosModules.default

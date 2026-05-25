@@ -11,7 +11,8 @@
     time.timeZone = "America/New_York";
 
     # Hardware configuration:
-    hardware.cpu.amd.updateMicrocode = config.hardware.enableRedistributableFirmware;
+    hardware.cpu.amd.updateMicrocode = true;
+    hardware.enableRedistributableFirmware = true;
     hardware.graphics.enable = true;
     hardware.nvidia = {
       modesetting.enable = true;

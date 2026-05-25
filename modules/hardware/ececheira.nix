@@ -10,7 +10,8 @@
     networking.hostName = "ececheira";
     networking.interfaces.enp4s0.useDHCP = true;
 
-    hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    hardware.cpu.intel.updateMicrocode = true;
+    hardware.enableRedistributableFirmware = true;
     hardware.bluetooth.enable = true;
     hardware.graphics.enable = true;
     hardware.graphics.extraPackages = with pkgs; [
