@@ -5,6 +5,7 @@
   fetchurl,
   appimageTools,
   undmg,
+  musl,
   commandLineArgs ? "",
   useVSCodeRipgrep ? stdenv.hostPlatform.isDarwin,
 }:
@@ -46,7 +47,7 @@ buildVscode rec {
       source;
 
   # for unpacking the DMG
-  extraNativeBuildInputs = lib.optionals hostPlatform.isDarwin [ undmg ];
+  extraNativeBuildInputs = if hostPlatform.isDarwin then [ undmg ] else [ musl ];
 
   sourceRoot =
     if hostPlatform.isLinux then "${pname}-${version}-extracted/usr/share/cursor" else "Cursor.app";
