@@ -5,14 +5,43 @@
   mkTheme = theme: let
       palette = theme.palette;
       accent = palette.${theme.accent};
+      transparent = "#00000000";
+      labelText = if theme.dark then palette.crust else (darken palette.text 0.18);
+      greyedBase = if theme.dark
+        then (blend palette.base palette.overlay0 0.10)
+        else (blend palette.base palette.overlay0 0.06);
+      greyedMantle = if theme.dark
+        then (blend palette.mantle palette.overlay0 0.12)
+        else (blend palette.mantle palette.overlay0 0.08);
+      greyedCrust = if theme.dark
+        then (blend palette.crust palette.overlay0 0.14)
+        else (blend palette.crust palette.overlay0 0.10);
+      editorBackground = if theme.dark
+        then (darken greyedBase 0.005)
+        else (lighten greyedBase 0.01);
+      chromeBackground = if theme.dark then greyedMantle else greyedCrust;
+      panelBackground = if theme.dark then greyedCrust else greyedMantle;
+      panelSurface = if theme.dark then greyedMantle else greyedCrust;
+      selectedBackground = if theme.dark
+        then (setAlpha (blend accent palette.surface1 0.35) 0.58)
+        else (setAlpha (blend accent palette.surface1 0.35) 0.36);
+      hoverBackground = if theme.dark
+        then (setAlpha (blend palette.blue palette.surface1 0.24) 0.45)
+        else (setAlpha (blend palette.blue palette.surface1 0.28) 0.32);
+      activeLineBackground = if theme.dark
+        then (setAlpha (blend accent palette.surface0 0.25) 0.45)
+        else (setAlpha (blend accent palette.surface0 0.25) 0.32);
+      statusBackground = color: if theme.dark
+        then (setAlpha color 0.22)
+        else (setAlpha color 0.14);
       rainbow = [
-        (blend palette.red palette.text 0.8)
-        (blend palette.peach palette.text 0.8)
-        (blend palette.yellow palette.text 0.8)
-        (blend palette.green palette.text 0.8)
-        (blend palette.sapphire palette.text 0.8)
-        (blend palette.lavender palette.text 0.8)
-        (blend palette.mauve palette.text 0.8)
+        (blend palette.red palette.text 0.35)
+        (blend palette.peach palette.text 0.35)
+        (blend palette.yellow palette.text 0.35)
+        (blend palette.green palette.text 0.35)
+        (blend palette.sapphire palette.text 0.35)
+        (blend palette.lavender palette.text 0.35)
+        (blend palette.mauve palette.text 0.35)
       ];
   in {
     name = theme.name;

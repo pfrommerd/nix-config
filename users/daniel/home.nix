@@ -17,7 +17,7 @@
       # latex + typst
       texlive.combined.scheme-full typst
       # cursor-cli
-      cursor-cli
+      cursor-cli ripgrep
     ];
 
     home.sessionVariables = {

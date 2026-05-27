@@ -43,6 +43,7 @@ in {
           npm_path = lib.getExe' pkgs.nodejs "npm";
         };
         auto_update = false;
+        buffer_font_size = 14;
         buffer_font_features = { calt = false; };
       };
     };
