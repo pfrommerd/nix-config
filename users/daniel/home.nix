@@ -9,20 +9,20 @@
   config = {
     home.packages = with pkgs; [
       # general tooling
-      uv devcontainer
+      devcontainer nixd nil
+      # languages tooling
+      uv nodejs cargo
       gnumake cmake clang clang-tools
-      # general utilities
+      # utilities
       unzip zip gnutar wget curl tree killall htop file
-      dig tmux ffmpeg awscli fastfetch minio-client
+      dig tmux ffmpeg awscli fastfetch minio-client ripgrep
       # latex + typst
       texlive.combined.scheme-full typst
-      # cursor-cli
-      cursor-cli ripgrep
+      # agentic tooling
+      cursor-cli codex
     ];
 
-    home.sessionVariables = {
-      EDITOR = "nvim";
-    };
+    home.sessionVariables = { EDITOR = "nvim"; };
 
     # hf auth token
     age.secrets.daniel-hf-token = {
