@@ -19,7 +19,7 @@
       # latex + typst
       texlive.combined.scheme-full typst
       # cursor-cli
-      cursor-cli pi-agent-rust
+      cursor-cli pi-coding-agent
     ];
 
     home.sessionVariables = { EDITOR = "nvim"; };
