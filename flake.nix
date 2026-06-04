@@ -43,6 +43,7 @@
             in
               leafValues ++ (builtins.concatMap attrValuesRecursive nestedSets);
 
+      # For now hardcode all standalone homes as x86_64-linux
       homeSystem = "x86_64-linux";
       util = import ./util;
       mkHomeConfiguration = user: graphical:

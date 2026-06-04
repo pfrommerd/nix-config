@@ -99,6 +99,9 @@
     programs.fish.enable = true;
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
+
+    home.username = lib.mkDefault "daniel";
+    home.homeDirectory = lib.mkDefault "/home/daniel";
     home.stateVersion = "26.05";
   };
 }
