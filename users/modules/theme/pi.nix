@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   util,
   ...
 }:
@@ -118,13 +119,17 @@ let
   darkTheme = mkTheme cfg.dark;
   lightTheme = mkTheme cfg.light;
   activeTheme = if cfg.preferDark then darkTheme else lightTheme;
+  darkThemeFile = pkgs.writeText "${darkTheme.name}.json" (builtins.toJSON darkTheme);
+  lightThemeFile = pkgs.writeText "${lightTheme.name}.json" (builtins.toJSON lightTheme);
 in
 {
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
-        home.file.".pi/agent/themes/${darkTheme.name}.json".text = builtins.toJSON darkTheme;
-        home.file.".pi/agent/themes/${lightTheme.name}.json".text = builtins.toJSON lightTheme;
+        programs.pi-coding-agent.extraFiles = {
+          "themes/${darkTheme.name}.json" = darkThemeFile;
+          "themes/${lightTheme.name}.json" = lightThemeFile;
+        };
       }
       (lib.mkIf config.programs.pi-coding-agent.enable {
         programs.pi-coding-agent.settings.theme = activeTheme.name;
