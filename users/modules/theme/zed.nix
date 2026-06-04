@@ -6,6 +6,10 @@
       palette = theme.palette;
       accent = palette.${theme.accent};
       transparent = "#00000000";
+      backdrop = "#000000";
+      paneBg = color: setAlpha color (opacity);
+      paneBgDeep = color: setAlpha color (opacity);
+      paneBgDeeper = color: setAlpha color (opacity * 0.9);
       labelText = if theme.dark then palette.crust else (darken palette.text 0.18);
       greyedBase = if theme.dark
         then (blend palette.base palette.overlay0 0.10)
@@ -60,29 +64,26 @@
             else (setAlpha color 0.3);
             background = color;
           }) rainbow;
-      "background" = if theme.dark then
-          (setAlpha (darken palette.base 0.01) opacity)
-        else
-          (setAlpha (lighten palette.mantle 0.01) opacity);
-      "vim.mode.text" = palette.crust;
-      "vim.normal.background" = palette.teal;
-      "vim.helix_normal.background" = palette.rosewater;
-      "vim.visual.background" = palette.lavender;
-      "vim.helix_select.background" = palette.lavender;
-      "vim.insert.background" = palette.green;
-      "vim.visual_line.background" = palette.lavender;
-      "vim.visual_block.background" = palette.mauve;
-      "vim.replace.background" = palette.maroon;
+      "background" = transparent;
       "background.appearance" = "blurred";
+      "vim.mode.text" = palette.crust;
+      "vim.normal.background" = paneBgDeeper palette.teal;
+      "vim.helix_normal.background" = paneBgDeeper palette.rosewater;
+      "vim.visual.background" = paneBgDeeper palette.lavender;
+      "vim.helix_select.background" = paneBgDeeper palette.lavender;
+      "vim.insert.background" = paneBgDeeper palette.green;
+      "vim.visual_line.background" = paneBgDeeper palette.lavender;
+      "vim.visual_block.background" = paneBgDeeper palette.mauve;
+      "vim.replace.background" = paneBgDeeper palette.maroon;
       "border" = palette.surface0;
       "border.variant" = blend palette.surface0 accent 0.3;
       "border.focused" = palette.lavender;
       "border.selected" = blend palette.surface0 accent 0.4;
       "border.transparent" = palette.green;
       "border.disabled" = palette.overlay0;
-      "elevated_surface.background" = palette.mantle;
-      "surface.background" = (setAlpha palette.mantle opacity);
-      "element.background" = palette.crust;
+      "elevated_surface.background" = paneBgDeeper palette.mantle;
+      "surface.background" = paneBg palette.mantle;
+      "element.background" = paneBg palette.crust;
       "element.hover" = (setAlpha palette.surface0 0.4);
       "element.active" = (setAlpha palette.surface2 0.6);
       "element.selected" =
@@ -110,35 +111,35 @@
       "icon.disabled" = palette.overlay0;
       "icon.placeholder" = palette.surface2;
       "icon.accent" = accent;
-      "status_bar.background" = (setAlpha palette.crust opacity);
-      "title_bar.inactive_background" = (setAlpha palette.crust opacity);
-      "title_bar.background" = (setAlpha palette.mantle opacity);
-      "toolbar.background" = (setAlpha palette.mantle opacity);
-      "tab_bar.background" = (setAlpha palette.mantle opacity);
-      "tab.inactive_background" = (setAlpha (darken palette.mantle 0.02) opacity);
-      "tab.active_background" = (setAlpha palette.base opacity);
+      "status_bar.background" = paneBg palette.crust;
+      "title_bar.inactive_background" = paneBg palette.crust;
+      "title_bar.background" = paneBg palette.mantle;
+      "toolbar.background" = paneBg palette.mantle;
+      "tab_bar.background" = paneBg palette.mantle;
+      "tab.inactive_background" = paneBgDeep (darken palette.mantle 0.02);
+      "tab.active_background" = paneBg palette.base;
       "search.match_background" = (setAlpha palette.teal 0.6);
-      "panel.background" = (setAlpha palette.mantle (opacity*opacity));
+      "panel.background" = (setAlpha palette.mantle 0.9);
       "panel.focused_border" = (setAlpha accent 0.7);
-      "panel.indent_guide" = (setAlpha palette.surface0 0.7);
+      "panel.indent_guide" = (setAlpha palette.surface0 0.3);
       "panel.indent_guide_active" = palette.surface2;
       "panel.indent_guide_hover" = accent;
-      "panel.overlay_background" = (setAlpha palette.crust opacity);
+      "panel.overlay_background" = paneBg palette.crust;
       "pane.focused_border" = (setAlpha accent 0.7);
       "pane_group.border" = palette.surface0;
-      "scrollbar.thumb.background" = (setAlpha palette.surface2 0.5);
+      "scrollbar.thumb.background" = (setAlpha palette.surface2 0.8);
       "scrollbar.thumb.active_background" = null;
       "scrollbar.thumb.border" = null;
-      "scrollbar.track.background" = (setAlpha palette.crust 0.5);
+      "scrollbar.track.background" = if theme.dark then paneBgDeeper palette.crust else (setAlpha palette.crust 0.5);
       "scrollbar.track.border" = (setAlpha palette.text 0.07);
       "minimap.thumb.background" = (setAlpha palette.surface2 0.2);
       "minimap.thumb.hover_background" = (setAlpha accent 0.4);
       "minimap.thumb.active_background" = (setAlpha accent 0.6);
       "minimap.thumb.border" = null;
       "editor.foreground" = palette.text;
-      "editor.background" = (setAlpha palette.base (opacity*opacity*opacity));
-      "editor.gutter.background" = (setAlpha (darken palette.base 0.01) opacity);
-      "editor.subheader.background" = (setAlpha palette.mantle opacity);
+      "editor.background" = paneBgDeeper palette.base;
+      "editor.gutter.background" = paneBg (darken palette.base 0.01);
+      "editor.subheader.background" = paneBg palette.mantle;
       "editor.active_line.background" = (setAlpha palette.text 0.07);
       "editor.highlighted_line.background" = null;
       "editor.line_number" = palette.overlay1;
@@ -153,8 +154,8 @@
       "editor.indent_guide_active" = palette.surface2;
 
       # Terminal colors (concrete from palette and palette.ansi)
-      "terminal.background" = palette.base;
-      "terminal.ansi.background" = palette.base;
+      "terminal.background" = if theme.dark then paneBgDeeper palette.base else palette.base;
+      "terminal.ansi.background" = if theme.dark then paneBgDeeper palette.base else palette.base;
       "terminal.foreground" = palette.text;
       "terminal.dim_foreground" = palette.overlay1;
       "terminal.bright_foreground" = palette.text;
@@ -202,10 +203,10 @@
       "deleted.background" = setAlpha palette.red 0.15;
       "hidden" = palette.overlay0;
       "hidden.border" = palette.overlay0;
-      "hidden.background" = setAlpha palette.mantle opacity;
+      "hidden.background" = paneBg palette.mantle;
       "hint" = palette.surface2;
       "hint.border" = palette.surface2;
-      "hint.background" = setAlpha palette.mantle opacity;
+      "hint.background" = paneBg palette.mantle;
       "ignored" = palette.overlay0;
       "ignored.border" = palette.overlay0;
       "ignored.background" = setAlpha palette.overlay0 0.15;
@@ -214,7 +215,7 @@
       "modified.background" = setAlpha palette.yellow 0.15;
       "predictive" = palette.overlay0;
       "predictive.border" = palette.lavender;
-      "predictive.background" = setAlpha palette.mantle 0.9;
+      "predictive.background" = if theme.dark then paneBg palette.mantle else setAlpha palette.mantle 0.9;
       "renamed" = palette.sapphire;
       "renamed.border" = palette.sapphire;
       "renamed.background" = setAlpha palette.sapphire 0.5;

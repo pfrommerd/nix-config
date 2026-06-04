@@ -37,7 +37,7 @@
       light.preset = "latte";
       dark.preset = "mocha";
       defaultOpacity = 0.85;
-      editor.opacity = 0.85;
+      editor.opacity = 0.9;
       terminal.opacity = 0.80;
       terminal.borderless = true;
     };
