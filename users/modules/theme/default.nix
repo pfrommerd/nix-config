@@ -1,7 +1,9 @@
-{ config, lib, pkgs, ...}: let
+{ config, lib, ... }:
+let
   theme-presets = import ./presets;
   cfg = config.distro.theme;
-in {
+in
+{
   imports = [
     ./fish.nix
     ./alacritty.nix
@@ -9,6 +11,7 @@ in {
     ./zellij.nix
     ./cosmic-term.nix
     ./cosmic-comp.nix
+    ./pi.nix
   ];
   options.distro.theme = {
     enable = lib.mkOption {

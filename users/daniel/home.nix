@@ -1,7 +1,9 @@
-{ config, lib, pkgs, inputs, framework, ... }: {
+{ config, pkgs, ... }:
+{
   imports = [
     # our user-specific graphical options
     ./graphical
+    ../modules/pi-coding-agent.nix
     # the custom theming module
     ../modules/theme
   ];
@@ -9,10 +11,17 @@
   config = {
     home.packages = with pkgs; [
       # general tooling
-      devcontainer nixd nil
+      devcontainer
+      nixd
+      nil
       # languages tooling
-      uv nodejs cargo
-      gnumake cmake clang clang-tools
+      uv
+      nodejs
+      cargo
+      gnumake
+      cmake
+      clang
+      clang-tools
       # utilities
       unzip zip gnutar wget curl tree killall htop file
       dig ffmpeg awscli fastfetch minio-client ripgrep
@@ -20,10 +29,12 @@
       texlive.combined.scheme-full typst
       # agentic tooling
       tmux
-      cursor-cli pi-coding-agent
+      cursor-cli
     ];
 
-    home.sessionVariables = { EDITOR = "nvim"; };
+    home.sessionVariables = {
+      EDITOR = "nvim";
+    };
 
     # hf auth token
     age.secrets.daniel-hf-token = {
@@ -50,13 +61,28 @@
     programs.neovim = {
       enable = true;
       vimAlias = true;
-      extraConfig = ''highlight Normal guibg=NONE
-                      set tabstop=4
-                      set expandtab'';
+      extraConfig = ''
+        highlight Normal guibg=NONE
+                              set tabstop=4
+                              set expandtab'';
+    };
+    programs.pi-coding-agent = {
+      enable = true;
+      settings = {
+        quietStartup = true;
+        compaction = {
+          enabled = true;
+          reserveTokens = 16384;
+        };
+      };
     };
     programs.fish.enable = true;
+<<<<<<< HEAD
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
+=======
+
+>>>>>>> f2136fc (Adding pi theming)
     home.stateVersion = "26.05";
   };
 }
