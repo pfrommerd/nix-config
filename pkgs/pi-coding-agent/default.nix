@@ -73,9 +73,11 @@ buildNpmPackage (finalAttrs: {
   ''
   + lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
     # Remove foreign Linux binaries that make audit-tmpdir try to inspect ELF
-    # RPATHs with patchelf
-    find "$nm/koffi/build/koffi" -mindepth 1 -maxdepth 1 -type d \
-      ! -name 'darwin_*' -exec rm -r {} +
+    # RPATHs with patchelf (koffi is optional — pruned when not a runtime dep)
+    if [ -d "$nm/koffi/build/koffi" ]; then
+      find "$nm/koffi/build/koffi" -mindepth 1 -maxdepth 1 -type d \
+        ! -name 'darwin_*' -exec rm -r {} +
+    fi
     rm -rf \
       "$nm/@anthropic-ai/sandbox-runtime/dist/vendor/seccomp" \
       "$nm/@anthropic-ai/sandbox-runtime/vendor/seccomp"

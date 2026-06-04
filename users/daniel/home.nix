@@ -11,26 +11,20 @@
   config = {
     home.packages = with pkgs; [
       # general tooling
-      devcontainer
-      nixd
-      nil
+      devcontainer nixd nil
       # languages tooling
-      uv
-      nodejs
-      cargo
-      gnumake
-      cmake
-      clang
-      clang-tools
+      uv nodejs cargo gnumake
+      cmake clang clang-tools
       # utilities
-      unzip zip gnutar wget curl tree killall htop file
-      dig ffmpeg awscli fastfetch minio-client ripgrep
+      unzip zip gnutar
+      wget curl tree killall
+      htop file dig ffmpeg
+      awscli fastfetch minio-client ripgrep
       # latex + typst
       texlive.combined.scheme-full typst
       # agentic tooling
-      tmux
-      cursor-cli
-    ];
+      tmux cursor-cli
+    ]; # fmt: skip
 
     home.sessionVariables = {
       EDITOR = "nvim";
@@ -77,12 +71,8 @@
       };
     };
     programs.fish.enable = true;
-<<<<<<< HEAD
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
-=======
-
->>>>>>> f2136fc (Adding pi theming)
     home.stateVersion = "26.05";
   };
 }
