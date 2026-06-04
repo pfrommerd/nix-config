@@ -1,11 +1,12 @@
 { config, lib, pkgs, ... }:
 {
-  imports = [ ../common.nix ../containers/paisa.nix ];
+  imports = [ ../common.nix ../vllm.nix ];
   options = {
     distro.machines.kronos.enable = lib.mkEnableOption "kronos configuration";
   };
-  config = let cfg = config.distro.machines.kronos;
-      in lib.mkIf cfg.enable {
+  config = let
+    cfg = config.distro.machines.kronos;
+  in lib.mkIf cfg.enable {
     hardware.nvidia-container-toolkit.enable = true;
     virtualisation.docker.enable = true;
     virtualisation.docker.daemon.settings = {
@@ -29,7 +30,7 @@
             }
             hosts {
                 100.96.208.99 kronos.ts.pfrommer.dev
-                100.96.208.99 llm.ts.pfrommer.dev
+                100.96.208.99 vllm-lite.ts.pfrommer.dev
                 100.96.208.99 chat.ts.pfrommer.dev
                 fallthrough
             }
@@ -38,12 +39,6 @@
         }
       '';
     };
-    services.ollama = {
-      enable = false;
-      package = pkgs.ollama-cuda;
-      loadModels = ["nishtahir/zeta:7b" "gpt-oss:20b"];
-      syncModels = true;
-    };
     services.open-webui = {
       enable = true;
       port = 11435;
@@ -51,8 +46,14 @@
         # OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
       };
     };
+    services.vllm = {
+      enable = false;
+      cudaSupport = true;
+      port = 11434;
+      model = "Qwen/Qwen2.5-7B-Instruct";
+    };
     distro.common.proxy = {
-      "llm.ts.pfrommer.dev" = "localhost:11434";
+      "vllm-lite.ts.pfrommer.dev" = "localhost:11434";
       "chat.ts.pfrommer.dev" = "localhost:11435";
     };
     # disable resolved so we can run coredns

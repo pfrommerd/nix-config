@@ -18,8 +18,8 @@
       dig tmux ffmpeg awscli fastfetch minio-client ripgrep
       # latex + typst
       texlive.combined.scheme-full typst
-      # agentic tooling
-      cursor-cli codex
+      # cursor-cli
+      cursor-cli pi-agent-rust
     ];
 
     home.sessionVariables = { EDITOR = "nvim"; };

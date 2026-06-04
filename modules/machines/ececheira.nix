@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 {
-  imports = [ ../common.nix ../graphical.nix ../containers/paisa.nix ];
+  imports = [ ../common.nix ../graphical.nix ];
   options = {
     distro.machines.ececheira.enable = lib.mkEnableOption "ececheira configuration";
   };
@@ -11,4 +11,3 @@
     distro.graphical.enable = true;
   };
 }
-
