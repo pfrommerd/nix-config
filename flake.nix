@@ -43,6 +43,43 @@
             in
               leafValues ++ (builtins.concatMap attrValuesRecursive nestedSets);
 
+      homeSystem = "x86_64-linux";
+      util = import ./util;
+      mkHomeConfiguration = user: graphical:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs {
+            system = homeSystem;
+            config = {
+              allowUnfree = true;
+              allowUnsupportedSystem = true;
+              cudaSupport = true;
+            };
+            overlays = [(import ./overlay.nix inputs)];
+          };
+          extraSpecialArgs = {
+            inherit inputs util;
+            framework = "home-manager";
+          };
+          modules = [
+            inputs.agenix.homeManagerModules.default
+            ./users/${user}/home.nix
+            {
+              home.username = user;
+              home.homeDirectory = "/home/${user}";
+              config.graphical = graphical;
+            }
+          ];
+        };
+      users = builtins.attrNames (lib.filterAttrs (name: type: type == "directory" && builtins.pathExists ./users/${name}/home.nix) (builtins.readDir ./users));
+      homeConfigurationsForUser = user: {
+        name = user;
+        value = mkHomeConfiguration user false;
+      };
+      graphicalHomeConfigurationsForUser = user: {
+        name = "${user}-graphical";
+        value = mkHomeConfiguration user true;
+      };
+
   in rec {
     nixosConfigurations = builtins.mapAttrs (name: host: mkSystem host)
          (lib.filterAttrs (name: config: config.system != "aarch64-darwin" &&
@@ -50,6 +87,9 @@
     darwinConfigurations = builtins.mapAttrs (name: host: mkSystem host)
       	 (lib.filterAttrs (name: config: config.system == "aarch64-darwin" ||
                                         config.system == "x86_64-darwin") configs);
+    homeConfigurations = builtins.listToAttrs (
+      (map homeConfigurationsForUser users) ++ (map graphicalHomeConfigurationsForUser users)
+    );
     # The jobsets
     packages = eachPlatform (platform:
       let

@@ -23,6 +23,14 @@ in
       '';
     };
 
+    sandbox = lib.mkOption {
+      type = lib.types.nullOr settingsFormat.type;
+      default = null;
+      description = ''
+        Pi agent sandbox configuration written to {file}`~/.pi/agent/sandbox.json`.
+      '';
+    };
+
     settings = lib.mkOption {
       type = settingsFormat.type;
       default = { };
@@ -36,7 +44,7 @@ in
       type = lib.types.attrsOf lib.types.path;
       default = { };
       description = ''
-        Extra files to copy into the Pi agent directory during activation.
+        Extra files to symlink into the Pi agent directory using {option}`home.file`.
         Attribute names are paths relative to {option}`programs.pi-coding-agent.agentDir`.
       '';
     };
@@ -45,18 +53,18 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
+    home.file =
+      (lib.mapAttrs' (name: source: lib.nameValuePair "${cfg.agentDir}/${name}" { inherit source; }) cfg.extraFiles)
+      // (lib.optionalAttrs (cfg.sandbox != null) {
+        "${cfg.agentDir}/sandbox.json".source = settingsFormat.generate "pi-agent-sandbox.json" cfg.sandbox;
+      });
+
     home.activation.mergePiCodingAgentSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       agent_dir="${config.home.homeDirectory}/${cfg.agentDir}"
       settings_file="$agent_dir/settings.json"
       managed_settings="${settingsFormat.generate "pi-agent-settings.json" cfg.settings}"
 
       mkdir -p "$agent_dir"
-      ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: source: ''
-        target="$agent_dir"/${lib.escapeShellArg name}
-        mkdir -p "$(${pkgs.coreutils}/bin/dirname "$target")"
-        rm -f "$target"
-        install -m 0644 ${lib.escapeShellArg (toString source)} "$target"
-      '') cfg.extraFiles)}
 
       tmp_file="$(mktemp "$agent_dir/settings.json.XXXXXX")"
       trap 'rm -f "$tmp_file"' EXIT

@@ -58,13 +58,38 @@
       vimAlias = true;
       extraConfig = ''
         highlight Normal guibg=NONE
-                              set tabstop=4
-                              set expandtab'';
+        set tabstop=4
+        set expandtab
+      '';
     };
     programs.pi-coding-agent = {
       enable = true;
+      sandbox = {
+        enabled = true;
+        network = {
+          allowedDomains = [
+            "npmjs.org" "*.npmjs.org"
+            "registry.npmjs.org" "registry.yarnpkg.com"
+            "pypi.org" "*.pypi.org" "pip.pypa.io"
+            "pythonhosted.org" "*.pythonhosted.org"
+            "files.pythonhosted.org" "bootstrap.pypa.io"
+            "github.com" "*.github.com" "api.github.com" "raw.githubusercontent.com"
+          ];
+          deniedDomains = [ ];
+        };
+        filesystem = {
+          denyRead = ["~/.ssh" "~/.aws" "~/.gnupg"];
+          allowWrite = ["." "/tmp"];
+          denyWrite = [".env"];
+        };
+        gpu.enabled = true;
+      };
       settings = {
         quietStartup = true;
+        packages = [
+          "git:git@github.com:pfrommerd/pi-sandbox.git"
+          "git:git@github.com:pfrommerd/pi-autoresearch.git"
+        ];
         compaction = {
           enabled = true;
           reserveTokens = 16384;
