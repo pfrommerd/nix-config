@@ -6,7 +6,20 @@
 }:
 let
   cfg = config.distro.theme;
-  inherit (util.colors.hex) blend;
+
+  blendRgb =
+    hex: another: value:
+    let
+      a = util.colors.hex.to.srgb hex;
+      b = util.colors.hex.to.srgb another;
+      mix = channel: (1 - value) * a.${channel} + value * b.${channel};
+    in
+    util.colors.srgb.to.hex {
+      r = mix "r";
+      g = mix "g";
+      b = mix "b";
+      a = (1 - value) * a.a + value * b.a;
+    };
 
   mkTheme =
     theme:
@@ -27,14 +40,14 @@ let
         yellow = palette.yellow;
         text = palette.text;
         gray = palette.subtext0;
-        dimGray = palette.overlay1;
-        darkGray = palette.surface1;
-        selectedBg = palette.surface0;
+        dimGray = palette.overlay0;
+        darkGray = palette.surface0;
+        selectedBg = palette.surface1;
         userMsgBg = palette.surface0;
         toolPendingBg = palette.mantle;
-        toolSuccessBg = blend palette.mantle palette.green 0.18;
-        toolErrorBg = blend palette.mantle palette.red 0.18;
-        customMsgBg = palette.surface1;
+        toolSuccessBg = palette.crust;
+        toolErrorBg = blendRgb palette.crust palette.red 0.10;
+        customMsgBg = blendRgb palette.crust accent 0.08;
       };
       colors = {
         accent = "accent";
@@ -89,16 +102,16 @@ let
         thinkingOff = "darkGray";
         thinkingMinimal = palette.overlay0;
         thinkingLow = palette.blue;
-        thinkingMedium = palette.sapphire;
-        thinkingHigh = palette.mauve;
-        thinkingXhigh = palette.pink;
+        thinkingMedium = accent;
+        thinkingHigh = palette.pink;
+        thinkingXhigh = palette.yellow;
 
         bashMode = "green";
       };
       export = {
         pageBg = palette.crust;
         cardBg = palette.base;
-        infoBg = blend palette.mantle palette.yellow 0.15;
+        infoBg = palette.surface0;
       };
     };
 

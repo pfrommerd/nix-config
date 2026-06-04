@@ -28,6 +28,7 @@
 
     home.sessionVariables = {
       EDITOR = "nvim";
+      COLORTERM = "truecolor";
     };
 
     # hf auth token
