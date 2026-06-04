@@ -15,10 +15,11 @@
       gnumake cmake clang clang-tools
       # utilities
       unzip zip gnutar wget curl tree killall htop file
-      dig tmux ffmpeg awscli fastfetch minio-client ripgrep
+      dig ffmpeg awscli fastfetch minio-client ripgrep
       # latex + typst
       texlive.combined.scheme-full typst
-      # cursor-cli
+      # agentic tooling
+      tmux
       cursor-cli pi-coding-agent
     ];
 
@@ -54,6 +55,8 @@
                       set expandtab'';
     };
     programs.fish.enable = true;
+    programs.zellij.enable = true;
+    programs.zellij.settings.show_startup_tips = false;
     home.stateVersion = "26.05";
   };
 }
