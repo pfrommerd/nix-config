@@ -41,6 +41,12 @@ in {
       hashedPasswordFile = config.age.secrets.daniel-passwd.path;
     };
     nix.settings.trusted-users = lib.optionals cfg.sudo ["daniel"];
+    environment.systemPackages = with pkgs; [
+      bubblewrap
+    ];
+    fonts.packages = lib.optionals cfg.cosmic [
+      pkgs.noto-powerline
+    ];
     # Enable home-manager for daniel
     home-manager.users.daniel = {...}: {
       imports = [
