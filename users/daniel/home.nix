@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 {
   imports = [
     # our user-specific graphical options
@@ -82,6 +82,7 @@
           allowWrite = ["." "/tmp"];
           denyWrite = [".env"];
         };
+        slurm.enabled = true;
         gpu.enabled = true;
       };
       settings = {
@@ -89,6 +90,7 @@
         packages = [
           "git:git@github.com:pfrommerd/pi-sandbox.git"
           "git:git@github.com:pfrommerd/pi-autoresearch.git"
+          "npm:@narumitw/pi-codex-usage"
         ];
         compaction = {
           enabled = true;
@@ -100,8 +102,6 @@
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
 
-    home.username = lib.mkDefault "daniel";
-    home.homeDirectory = lib.mkDefault "/home/daniel";
     home.stateVersion = "26.05";
   };
 }

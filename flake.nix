@@ -64,11 +64,11 @@
           modules = [
             inputs.agenix.homeManagerModules.default
             ./users/${user}/home.nix
-            {
+            { config = {
               home.username = user;
               home.homeDirectory = "/home/${user}";
-              config.graphical = graphical;
-            }
+              graphical = graphical;
+            }; }
           ];
         };
       users = builtins.attrNames (lib.filterAttrs (name: type: type == "directory" && builtins.pathExists ./users/${name}/home.nix) (builtins.readDir ./users));

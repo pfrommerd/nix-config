@@ -27,7 +27,7 @@ in
       type = lib.types.nullOr settingsFormat.type;
       default = null;
       description = ''
-        Pi agent sandbox configuration written to {file}`~/.pi/agent/sandbox.json`.
+        Pi sandbox extension configuration written to {file}`~/.pi/agent/extensions/sandbox.json`.
       '';
     };
 
@@ -56,7 +56,7 @@ in
     home.file =
       (lib.mapAttrs' (name: source: lib.nameValuePair "${cfg.agentDir}/${name}" { inherit source; }) cfg.extraFiles)
       // (lib.optionalAttrs (cfg.sandbox != null) {
-        "${cfg.agentDir}/sandbox.json".source = settingsFormat.generate "pi-agent-sandbox.json" cfg.sandbox;
+        "${cfg.agentDir}/extensions/sandbox.json".source = settingsFormat.generate "pi-agent-extensions-sandbox.json" cfg.sandbox;
       });
 
     home.activation.mergePiCodingAgentSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
