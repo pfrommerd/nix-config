@@ -14,28 +14,3 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - run: nix flake check --no-build --all-systems
-  build:
-    name: Build Outputs
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - platform: linux/amd64
-          runner: ubuntu-24.04
-        #- platform: linux/arm64
-        #  runner: ubuntu-24.04-arm
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Attic cache
-        uses: ryanccn/attic-action@v0
-        with:
-          endpoint: ${{ secrets.ATTIC_ENDPOINT }}
-          cache: ${{ secrets.ATTIC_CACHE }}
-          token: ${{ secrets.ATTIC_TOKEN }}
-      - run: nix build .#ci
