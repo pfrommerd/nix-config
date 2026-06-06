@@ -126,10 +126,8 @@ in
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
-        programs.pi-coding-agent.extraFiles = {
-          "themes/${darkTheme.name}.json" = darkThemeFile;
-          "themes/${lightTheme.name}.json" = lightThemeFile;
-        };
+        home.file."${config.programs.pi-coding-agent.configDir}/themes/${darkTheme.name}.json".source = darkThemeFile;
+        home.file."${config.programs.pi-coding-agent.configDir}/themes/${lightTheme.name}.json".source = lightThemeFile;
       }
       (lib.mkIf config.programs.pi-coding-agent.enable {
         programs.pi-coding-agent.settings.theme = activeTheme.name;

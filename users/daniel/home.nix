@@ -3,7 +3,6 @@
   imports = [
     # our user-specific graphical options
     ./graphical
-    ../modules/pi-coding-agent.nix
     # the custom theming module
     ../modules/theme
   ];
@@ -64,27 +63,6 @@
     };
     programs.pi-coding-agent = {
       enable = true;
-      sandbox = {
-        enabled = true;
-        network = {
-          allowedDomains = [
-            "npmjs.org" "*.npmjs.org"
-            "registry.npmjs.org" "registry.yarnpkg.com"
-            "pypi.org" "*.pypi.org" "pip.pypa.io"
-            "pythonhosted.org" "*.pythonhosted.org"
-            "files.pythonhosted.org" "bootstrap.pypa.io"
-            "github.com" "*.github.com" "api.github.com" "raw.githubusercontent.com"
-          ];
-          deniedDomains = [ ];
-        };
-        filesystem = {
-          denyRead = ["~/.ssh" "~/.aws" "~/.gnupg"];
-          allowWrite = ["." "/tmp"];
-          denyWrite = [".env"];
-        };
-        slurm.enabled = true;
-        gpu.enabled = true;
-      };
       settings = {
         quietStartup = true;
         packages = [
@@ -98,6 +76,29 @@
         };
       };
     };
+
+    home.file."${config.programs.pi-coding-agent.configDir}/extensions/sandbox.json".source =
+      (pkgs.formats.json { }).generate "pi-sandbox.json" {
+        enabled = true;
+        network = {
+          allowedDomains = [
+            "npmjs.org" "*.npmjs.org"
+            "registry.npmjs.org" "registry.yarnpkg.com"
+            "pypi.org" "*.pypi.org" "pip.pypa.io"
+            "pythonhosted.org" "*.pythonhosted.org"
+            "files.pythonhosted.org" "bootstrap.pypa.io"
+            "github.com" "*.github.com" "api.github.com" "raw.githubusercontent.com"
+          ];
+          deniedDomains = [ ];
+        };
+        filesystem = {
+          denyRead = [ "~/.ssh" "~/.aws" "~/.gnupg" ];
+          allowWrite = [ "." "/tmp" ];
+          denyWrite = [ ".env" ];
+        };
+        slurm.enabled = true;
+        gpu.enabled = true;
+      };
     programs.fish.enable = true;
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;

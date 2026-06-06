@@ -43,6 +43,8 @@
         macchina
       ];
 
+      fonts.packages = with pkgs; [ powerline-fonts powerline-symbols font-awesome ];
+
       programs.nix-ld.enable = true;
       programs.nix-ld.libraries = [
         pkgs.libGL
