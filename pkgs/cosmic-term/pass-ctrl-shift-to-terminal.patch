@@ -1,0 +1,66 @@
+diff --git a/src/main.rs b/src/main.rs
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -2457,6 +2457,12 @@ impl Application for CosmicTerm {
+                     return Task::none();
+                 }
+ 
++                // Let terminal applications handle Ctrl+Shift combinations instead of
++                // treating them as COSMIC Terminal shortcuts.
++                if modifiers.control() && modifiers.shift() {
++                    return Task::none();
++                }
++
+                 // Handle configurable keys
+                 for (key_bind, action) in &self.key_binds {
+                     if key_bind.matches(modifiers, &key) {
+diff --git a/src/terminal_box.rs b/src/terminal_box.rs
+--- a/src/terminal_box.rs
++++ b/src/terminal_box.rs
+@@ -897,7 +897,8 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
+                 ..
+             }) if state.is_focused && named == modified_named => {
+                 for key_bind in self.key_binds.keys() {
+-                    if key_bind.matches(*modifiers, &Key::Named(*named)) {
++                    if !(modifiers.control() && modifiers.shift())
++                        && key_bind.matches(*modifiers, &Key::Named(*named)) {
+                         shell.capture_event();
+                         return;
+                     }
+@@ -1086,7 +1087,8 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
+                 ..
+             }) if state.is_focused => {
+                 for key_bind in self.key_binds.keys() {
+-                    if key_bind.matches(*modifiers, key) {
++                    if !(modifiers.control() && modifiers.shift())
++                        && key_bind.matches(*modifiers, key) {
+                         shell.capture_event();
+ 
+                         return;
+@@ -1128,13 +1130,19 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
+                         }
+                     }
+                     (false, true, _, true) => {
+-                        //This is normally Ctrl+Minus, but since that
+-                        //is taken by zoom, we send that code for
+-                        //Ctrl+Underline instead, like xterm and
+-                        //gnome-terminal
+-                        if *key == Key::Character("_".into()) {
+-                            terminal.input_scroll(b"\x1F".as_slice());
+-                            shell.capture_event();
++                        // Preserve Ctrl+Shift for terminal applications using CSI-u
++                        // modified-key encoding, e.g. Ctrl+Shift+F => ESC [ 70 ; 6 u.
++                        if let Key::Character(key_character) = key {
++                            let mut chars = key_character.chars();
++                            if let Some(ch) = chars.next() {
++                                if chars.next().is_none() {
++                                    terminal.input_scroll(
++                                        format!("\x1B[{};{}u", ch as u32, calculate_modifier_number(state))
++                                            .into_bytes(),
++                                    );
++                                    shell.capture_event();
++                                }
++                            }
+                         }
+                     }
+                     (false, false, true, _) => {
