@@ -136,7 +136,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   # remove package that has a broken Cargo.toml
   # see: https://github.com/NixOS/nixpkgs/pull/445924#issuecomment-3334648753
   depsExtraArgs.postBuild = ''
-    rm -r $out/git/*/candle-book/
+    rm -rf $out/git/*/candle-book/
   '';
 
   cargoHash = sourcesJson.cargoHash;
@@ -322,4 +322,3 @@ rustPlatform.buildRustPackage (finalAttrs: {
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
   };
 })
-

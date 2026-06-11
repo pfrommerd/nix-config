@@ -1,4 +1,11 @@
-{ config, pkgs, lib, inputs, cosmicLib, ...}:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  cosmicLib,
+  ...
+}:
 let
   inherit (cosmicLib.cosmic) mkRON;
   inherit (config.distro.theme) defaultOpacity;
@@ -11,6 +18,21 @@ in
   config = lib.mkIf (config.graphical && config.cosmic) {
     # terminal configuration
     programs.cosmic-term.enable = true;
+    wayland.desktopManager.cosmic.configFile."com.system76.CosmicTerm" = {
+      version = 1;
+      entries.shortcuts_custom = mkRON "map" [
+        {
+          key = {
+            modifiers = [
+              (mkRON "enum" "Ctrl")
+              (mkRON "enum" "Shift")
+            ];
+            key = "F";
+          };
+          value = mkRON "enum" "Disable";
+        }
+      ];
+    };
     # desktop configuration
     wayland.desktopManager.cosmic = {
       enable = true;
@@ -34,9 +56,9 @@ in
         };
       };
       idle = {
-          screen_off_time = cosmicLib.cosmic.mkRON "optional" 120000;
-          suspend_on_ac_time = cosmicLib.cosmic.mkRON "optional" null;
-          suspend_on_battery_time = cosmicLib.cosmic.mkRON "optional" (15*60000);
+        screen_off_time = cosmicLib.cosmic.mkRON "optional" 120000;
+        suspend_on_ac_time = cosmicLib.cosmic.mkRON "optional" null;
+        suspend_on_battery_time = cosmicLib.cosmic.mkRON "optional" (15 * 60000);
       };
       applets = {
         time.settings = {
@@ -59,21 +81,23 @@ in
           background = mkRON "enum" "ThemeDefault";
           size = mkRON "enum" "XS";
           output = mkRON "enum" "All";
-          plugins_wings = mkRON "optional" (mkRON "tuple" [
-            [
-              "com.system76.CosmicAppletTime"
+          plugins_wings = mkRON "optional" (
+            mkRON "tuple" [
+              [
+                "com.system76.CosmicAppletTime"
+              ]
+              [
+                "com.system76.CosmicAppletStatusArea"
+                "com.system76.CosmicAppletTiling"
+                "com.system76.CosmicAppletAudio"
+                "com.system76.CosmicAppletBluetooth"
+                "com.system76.CosmicAppletNetwork"
+                "com.system76.CosmicAppletBattery"
+                "com.system76.CosmicAppletNotifications"
+                "com.system76.CosmicAppletPower"
+              ]
             ]
-            [
-              "com.system76.CosmicAppletStatusArea"
-              "com.system76.CosmicAppletTiling"
-              "com.system76.CosmicAppletAudio"
-              "com.system76.CosmicAppletBluetooth"
-              "com.system76.CosmicAppletNetwork"
-              "com.system76.CosmicAppletBattery"
-              "com.system76.CosmicAppletNotifications"
-              "com.system76.CosmicAppletPower"
-            ]
-          ]);
+          );
           plugins_center = mkRON "optional" null;
         }
       ];
@@ -87,45 +111,89 @@ in
           scaling_mode = mkRON "enum" "Stretch";
           source = mkRON "enum" {
             variant = "Path";
-            value = [./wallpaper.jpg];
+            value = [ ./wallpaper.jpg ];
           };
         }
       ];
-      shortcuts = let mkopts = mod: [
-        # open terminal + browser + launcher
-        { key = "${mod}+Return"; action = mkRON "enum" { value = [ "cosmic-term" ]; variant = "Spawn"; }; }
-        { key = "${mod}+C"; action = mkRON "enum" { value = [ "firefox" ]; variant = "Spawn"; }; }
-        { key = "${mod}"; action = mkRON "enum" "Disable"; }
-        { key = "${mod}+D"; action = mkRON "enum" { variant = "Spawn"; value = [ "cosmic-launcher" ];};}
-        # window management
-        { key = "${mod}+Q"; action = mkRON "enum" "Close"; }
-        # window navigation
-        { key = "${mod}+H"; action = mkRON "enum" "Disable"; }
-        { key = "${mod}+Shift+H"; action = mkRON "enum" "Disable"; }
-        { key = "${mod}+Ctrl+Alt+H"; action = mkRON "enum" "Disable"; }
-        { key = "${mod}+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "${mod}+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "${mod}+semicolon"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "${mod}+Shift+semicolon"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Right")]; }; }
-        { key = "${mod}+J"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Left")]; }; }
-        { key = "${mod}+Shift+J"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Left")]; }; }
-        { key = "${mod}+K"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Down")]; }; }
-        { key = "${mod}+Shift+K"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Down")]; }; }
-        { key = "${mod}+L"; action = mkRON "enum" { variant = "Focus"; value = [(mkRON "enum" "Up")]; }; }
-        { key = "${mod}+Shift+L"; action = mkRON "enum" { variant = "Move"; value = [(mkRON "enum" "Up")]; }; }
-        # workspace expose
-        { key = "${mod}+W"; action = mkRON "enum" { variant = "System"; value = [(mkRON "enum" "WorkspaceOverview")];}; }
-        # workspace navigation
-        { key = "${mod}+1"; action = mkRON "enum" { variant = "Workspace"; value = [1];}; }
-        { key = "${mod}+2"; action = mkRON "enum" { variant = "Workspace"; value = [2];}; }
-        { key = "${mod}+3"; action = mkRON "enum" { variant = "Workspace"; value = [3];}; }
-        { key = "${mod}+4"; action = mkRON "enum" { variant = "Workspace"; value = [4];}; }
-        { key = "${mod}+5"; action = mkRON "enum" { variant = "Workspace"; value = [5];}; }
-        { key = "${mod}+6"; action = mkRON "enum" { variant = "Workspace"; value = [6];}; }
-        { key = "${mod}+7"; action = mkRON "enum" { variant = "Workspace"; value = [7];}; }
-        { key = "${mod}+8"; action = mkRON "enum" { variant = "Workspace"; value = [8];}; }
-        { key = "${mod}+9"; action = mkRON "enum" { variant = "Workspace"; value = [9];}; }
-      ]; in (mkopts "Super") ++ (mkopts "Alt");
+      shortcuts =
+        let
+          shortcut = key: action: { inherit key action; };
+          enumAction = key: variant: shortcut key (mkRON "enum" variant);
+          spawn =
+            key: command:
+            shortcut key (
+              mkRON "enum" {
+                variant = "Spawn";
+                value = [ command ];
+              }
+            );
+          directional =
+            variant: direction:
+            mkRON "enum" {
+              inherit variant;
+              value = [ (mkRON "enum" direction) ];
+            };
+          focus = key: direction: shortcut key (directional "Focus" direction);
+          move = key: direction: shortcut key (directional "Move" direction);
+          system =
+            key: action:
+            shortcut key (
+              mkRON "enum" {
+                variant = "System";
+                value = [ (mkRON "enum" action) ];
+              }
+            );
+          workspace =
+            key: number:
+            shortcut key (
+              mkRON "enum" {
+                variant = "Workspace";
+                value = [ number ];
+              }
+            );
+          disable = key: enumAction key "Disable";
+
+          mkopts = mod: [
+            # open terminal + browser + launcher
+            (spawn "${mod}+Return" "cosmic-term")
+            (spawn "${mod}+C" "firefox")
+            (disable "${mod}")
+            (spawn "${mod}+D" "cosmic-launcher")
+
+            # window management
+            (enumAction "${mod}+Q" "Close")
+
+            # window navigation
+            (disable "${mod}+H")
+            (disable "${mod}+Shift+H")
+            (disable "${mod}+Ctrl+Alt+H")
+            (focus "${mod}+semicolon" "Right")
+            (move "${mod}+Shift+semicolon" "Right")
+            (focus "${mod}+semicolon" "Right")
+            (move "${mod}+Shift+semicolon" "Right")
+            (focus "${mod}+J" "Left")
+            (move "${mod}+Shift+J" "Left")
+            (focus "${mod}+K" "Down")
+            (move "${mod}+Shift+K" "Down")
+            (focus "${mod}+L" "Up")
+            (move "${mod}+Shift+L" "Up")
+
+            # workspace expose
+            (system "${mod}+W" "WorkspaceOverview")
+
+            # workspace navigation
+            (workspace "${mod}+1" 1)
+            (workspace "${mod}+2" 2)
+            (workspace "${mod}+3" 3)
+            (workspace "${mod}+4" 4)
+            (workspace "${mod}+5" 5)
+            (workspace "${mod}+6" 6)
+            (workspace "${mod}+7" 7)
+            (workspace "${mod}+8" 8)
+            (workspace "${mod}+9" 9)
+          ];
+        in
+        (mkopts "Super") ++ (mkopts "Alt");
     };
   };
 }
