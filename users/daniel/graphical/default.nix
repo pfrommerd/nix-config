@@ -1,5 +1,6 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, framework, ... }:
 let
+  isDarwin = framework == "nix-darwin";
   zed-alias = (pkgs.writeShellScriptBin "zed" ''
     exec ${pkgs.zed-editor}/bin/zeditor "$@"
   '');
@@ -43,18 +44,13 @@ in {
         buffer_font_features = { calt = false; };
       };
     };
-    programs.alacritty = {
-      enable = !pkgs.stdenv.isLinux;
-      settings = {
-        env = { TERM = "xterm-256color"; };
-        window = {
-          decorations = if pkgs.stdenv.isDarwin then "Buttonless"
-          else "Full";
-          opacity = if pkgs.stdenv.isDarwin then 1.0 else 0.9;
-          padding = if pkgs.stdenv.isDarwin then { x = 4; y = 6; } else {};
-        };
-        font.size = if pkgs.stdenv.isDarwin then 15 else 12;
-      };
-    };
+    # Terminal: cosmic-term everywhere (alacritty retired).
+    # On Linux it's enabled by the COSMIC desktop (see desktop.nix). On macOS
+    # there is no COSMIC desktop, so we enable cosmic-manager's declarative
+    # layer directly — this is lightweight (just lib.cosmic + the cosmic-term
+    # config applied via cosmic-ext-ctl at activation) and gives us the same
+    # themed terminal without pulling in the rest of COSMIC.
+    wayland.desktopManager.cosmic.enable = lib.mkIf isDarwin true;
+    programs.cosmic-term.enable = lib.mkIf isDarwin true;
   };
 }

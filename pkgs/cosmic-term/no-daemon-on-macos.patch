@@ -1,0 +1,21 @@
+Do not daemonize cosmic-term on macOS. `fork::daemon` forks without exec, and
+macOS GPU frameworks (Metal/wgpu) are not fork-safe: the child cannot reach
+MTLCompilerService ("No such process"), so wgpu pipeline creation fails. Run in
+the foreground on macOS instead; daemonization is unchanged on other platforms.
+
+diff --git a/src/main.rs b/src/main.rs
+index b9682fe..289ff14 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -97,7 +97,10 @@ fn main() -> Result<(), Box<dyn Error>> {
+ 
+     let mut shell_program_opt = None;
+     let mut shell_args = Vec::new();
+-    let mut daemonize = true;
++    // On macOS, daemonizing forks without exec, after which Metal/wgpu cannot
++    // reach MTLCompilerService (GPU frameworks are not fork-safe). Run in the
++    // foreground there instead.
++    let mut daemonize = !cfg!(target_os = "macos");
+     let mut working_directory = None;
+     // Parse the arguments using clap_lex
+     while let Some(arg) = raw_args.next_os(&mut cursor) {

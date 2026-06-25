@@ -59,6 +59,12 @@ in {
         (mkScheme cfg.light)
       ];
       settings = {
+        # Follow the system appearance so the dark/light syntax themes above
+        # switch automatically (macOS appearance, or the COSMIC theme on Linux).
+        app_theme = {
+          __type = "enum";
+          variant = "System";
+        };
         opacity = builtins.floor (cfg.terminal.opacity * 100);
         show_headerbar = !cfg.terminal.borderless;
       };

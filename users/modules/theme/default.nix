@@ -6,7 +6,6 @@ in
 {
   imports = [
     ./fish.nix
-    ./alacritty.nix
     ./zed.nix
     ./zellij.nix
     ./cosmic-term.nix

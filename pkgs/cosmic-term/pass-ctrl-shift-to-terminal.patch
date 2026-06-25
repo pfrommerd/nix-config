@@ -1,7 +1,8 @@
 diff --git a/src/main.rs b/src/main.rs
+index b9682fe..2b904f2 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -2457,6 +2457,18 @@ impl Application for CosmicTerm {
+@@ -2462,6 +2462,18 @@ impl Application for App {
                      return Task::none();
                  }
  
@@ -19,22 +20,24 @@ diff --git a/src/main.rs b/src/main.rs
 +
                  // Handle configurable keys
                  for (key_bind, action) in &self.key_binds {
-                     if key_bind.matches(modifiers, &key) {
+                     if key_bind.matches(modifiers, &key, Some(&physical)) {
 diff --git a/src/terminal_box.rs b/src/terminal_box.rs
+index 91c37c8..7b5d8b9 100644
 --- a/src/terminal_box.rs
 +++ b/src/terminal_box.rs
-@@ -897,7 +897,8 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
+@@ -940,7 +940,9 @@ where
                  ..
              }) if state.is_focused && named == modified_named => {
                  for key_bind in self.key_binds.keys() {
--                    if key_bind.matches(*modifiers, &Key::Named(*named)) {
+-                    if key_bind.matches(*modifiers, &Key::Named(*named), Some(physical_key)) {
 +                    if !(modifiers.control() && modifiers.shift())
-+                        && key_bind.matches(*modifiers, &Key::Named(*named)) {
++                        && key_bind.matches(*modifiers, &Key::Named(*named), Some(physical_key))
++                    {
                          shell.capture_event();
                          return;
                      }
-@@ -1085,8 +1086,16 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
-                 key,
+@@ -1130,8 +1132,17 @@ where
+                 modified_key,
                  ..
              }) if state.is_focused => {
 +                let is_clipboard_shortcut = matches!(
@@ -45,21 +48,21 @@ diff --git a/src/terminal_box.rs b/src/terminal_box.rs
 +                );
 +
                  for key_bind in self.key_binds.keys() {
--                    if key_bind.matches(*modifiers, key) {
+-                    if key_bind.matches(*modifiers, key, Some(physical_key)) {
 +                    if (!(modifiers.control() && modifiers.shift()) || is_clipboard_shortcut)
-+                        && key_bind.matches(*modifiers, key) {
++                        && key_bind.matches(*modifiers, key, Some(physical_key))
++                    {
                          shell.capture_event();
  
                          return;
-@@ -1128,13 +1138,19 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for TerminalBox<'a, Message>
+@@ -1174,12 +1185,23 @@ where
                          }
                      }
                      (false, true, _, true) => {
--                        //This is normally Ctrl+Minus, but since that
--                        //is taken by zoom, we send that code for
--                        //Ctrl+Underline instead, like xterm and
--                        //gnome-terminal
--                        if *key == Key::Character("_".into()) {
+-                        // Ctrl+Shift+<key>: send 0x1F (C-_) on '_', matching xterm/gnome-terminal.
+-                        // Use `modified_key` so this works regardless of which physical key
+-                        // produces '_' on the user's layout.
+-                        if *modified_key == Key::Character("_".into()) {
 -                            terminal.input_scroll(b"\x1F".as_slice());
 -                            shell.capture_event();
 +                        // Preserve Ctrl+Shift for terminal applications using CSI-u
@@ -69,8 +72,12 @@ diff --git a/src/terminal_box.rs b/src/terminal_box.rs
 +                            if let Some(ch) = chars.next() {
 +                                if chars.next().is_none() {
 +                                    terminal.input_scroll(
-+                                        format!("\x1B[{};{}u", ch as u32, calculate_modifier_number(state))
-+                                            .into_bytes(),
++                                        format!(
++                                            "\x1B[{};{}u",
++                                            ch as u32,
++                                            calculate_modifier_number(state)
++                                        )
++                                        .into_bytes(),
 +                                    );
 +                                    shell.capture_event();
 +                                }

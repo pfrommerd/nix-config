@@ -38,7 +38,7 @@
 
     distro.theme = {
       enable = true;
-      preferDark = true;
+      preferDark = lib.mkDefault false;
       accent = "lavender";
       light.preset = "latte";
       dark.preset = "mocha";
@@ -46,6 +46,15 @@
       editor.opacity = 0.9;
       terminal.opacity = 0.80;
       terminal.borderless = true;
+    };
+
+    # Dark/light variants as home-manager specialisations. The base generation
+    # is dark (preferDark = true above); switch at runtime by activating one of
+    # the specialisations, e.g.
+    #   ~/.local/state/nix/profiles/home-manager/specialisation/light/activate
+    specialisation = {
+      dark.configuration.distro.theme.preferDark = true;
+      light.configuration.distro.theme.preferDark = false;
     };
 
     programs.git.enable = true;
