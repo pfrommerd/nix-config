@@ -66,7 +66,6 @@
       settings = {
         quietStartup = true;
         packages = [
-          "git:git@github.com:pfrommerd/pi-sandbox.git"
           "git:git@github.com:pfrommerd/pi-autoresearch.git"
           "npm:@narumitw/pi-codex-usage"
         ];
