@@ -1,0 +1,165 @@
+Follow the macOS system appearance for light/dark theming.
+
+cosmic-term resolves its "System" app theme through libcosmic's
+`theme::system_preference()`, which reads cosmic-config (`ThemeMode`). On macOS
+that config does not exist, so it always falls back to dark and the terminal
+ignores the real Aqua light/dark setting. libcosmic also only reacts to
+cosmic-config theme-mode changes, so runtime appearance switches are missed too.
+
+For the System variant, resolve the macOS appearance directly via
+`defaults read -g AppleInterfaceStyle` (pinning `prefer_dark` so the cosmic-config
+ThemeMode watcher does not force it back to dark), and add a subscription that
+observes the `AppleInterfaceThemeChangedNotification` distributed notification —
+registered on the main run loop via GCD — to re-apply the theme on every flip.
+
+The macOS observer uses objc2 / objc2-foundation / block2 / dispatch2, which are
+already in the dependency tree via winit on macOS, so the vendored crate set is
+unchanged (only new dependency edges, resolved offline at build time). Everything
+is `cfg(target_os = "macos")`-gated; no-op on Linux.
+
+diff --git a/Cargo.toml b/Cargo.toml
+index a8de2ba..f0573bd 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -52,6 +52,23 @@ features = ["about", "autosize", "multi-window", "tokio", "winit", "surface-mess
+ [target.'cfg(unix)'.dependencies]
+ fork = "0.4"
+ 
++# Used to follow the macOS system light/dark appearance: observe the
++# `AppleInterfaceThemeChangedNotification` distributed notification (registered on
++# the main run loop via GCD). These crates are already in the dependency tree via
++# winit on macOS, so no new vendored sources are pulled in.
++[target.'cfg(target_os = "macos")'.dependencies]
++objc2 = "0.6"
++objc2-foundation = { version = "0.3", default-features = false, features = [
++    "std",
++    "block2",
++    "NSString",
++    "NSNotification",
++    "NSDistributedNotificationCenter",
++    "NSOperation",
++] }
++block2 = "0.6"
++dispatch2 = "0.3"
++
+ [build-dependencies]
+ xdgen = "0.1"
+ 
+diff --git a/src/config.rs b/src/config.rs
+index 49eb079..55d5649 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -37,11 +37,41 @@ impl AppTheme {
+                 t.theme_type.prefer_dark(Some(false));
+                 t
+             }
++            // On macOS there is no cosmic-config, so `system_preference()` always
++            // reports dark. Resolve the real Aqua appearance instead and pin
++            // `prefer_dark` so libcosmic's ThemeMode watcher (which also reads the
++            // missing cosmic-config and would otherwise force dark) leaves it alone.
++            #[cfg(target_os = "macos")]
++            Self::System => {
++                let is_dark = macos_prefers_dark();
++                let mut t = if is_dark {
++                    theme::system_dark()
++                } else {
++                    theme::system_light()
++                };
++                t.theme_type.prefer_dark(Some(is_dark));
++                t
++            }
++            #[cfg(not(target_os = "macos"))]
+             Self::System => theme::system_preference(),
+         }
+     }
+ }
+ 
++/// Whether the macOS system appearance is currently set to Dark.
++///
++/// The global `AppleInterfaceStyle` default holds the string "Dark" in dark mode
++/// and is absent (the read fails) in light mode, so a successful read starting
++/// with "Dark" means dark and anything else means light.
++#[cfg(target_os = "macos")]
++pub fn macos_prefers_dark() -> bool {
++    std::process::Command::new("defaults")
++        .args(["read", "-g", "AppleInterfaceStyle"])
++        .output()
++        .map(|o| o.stdout.starts_with(b"Dark"))
++        .unwrap_or(false)
++}
++
+ #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+ pub enum ColorSchemeKind {
+     Dark,
+diff --git a/src/main.rs b/src/main.rs
+index b9682fe..2a679ae 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -3620,6 +3620,59 @@ impl Application for App {
+         struct ConfigSubscription;
+         struct TerminalEventSubscription;
+ 
++        // On macOS, follow the system (Aqua) light/dark appearance. libcosmic only
++        // reacts to cosmic-config theme-mode changes, which do not exist here, so
++        // observe the `AppleInterfaceThemeChangedNotification` distributed
++        // notification and re-apply the theme (which re-reads the appearance) on
++        // every flip.
++        #[cfg(target_os = "macos")]
++        let macos_appearance = {
++            struct AppearanceSubscription;
++            Subscription::run_with(TypeId::of::<AppearanceSubscription>(), |_| {
++                stream::channel(
++                    1,
++                    |mut output: iced::futures::channel::mpsc::Sender<Message>| async move {
++                        let (tx, mut rx) = mpsc::unbounded_channel::<()>();
++
++                        // A distributed notification is delivered on the run loop of
++                        // the thread that registered the observer, so it must be the
++                        // main thread (the one winit drives). Register there via GCD;
++                        // the block forwards each change onto `tx`.
++                        dispatch2::DispatchQueue::main().exec_async(move || {
++                            use block2::RcBlock;
++                            use objc2_foundation::{
++                                NSDistributedNotificationCenter, NSNotification, NSString,
++                            };
++                            use std::ptr::NonNull;
++
++                            let center = NSDistributedNotificationCenter::defaultCenter();
++                            let name = NSString::from_str("AppleInterfaceThemeChangedNotification");
++                            let block = RcBlock::new(move |_: NonNull<NSNotification>| {
++                                let _ = tx.send(());
++                            });
++                            // queue `None` => delivered on this (main) thread's run loop.
++                            let observer = unsafe {
++                                center.addObserverForName_object_queue_usingBlock(
++                                    Some(&name),
++                                    None,
++                                    None,
++                                    &block,
++                                )
++                            };
++                            // Observe for the whole process lifetime; never unregister.
++                            std::mem::forget(observer);
++                        });
++
++                        while rx.recv().await.is_some() {
++                            let _ = output.send(Message::SystemThemeChange).await;
++                        }
++                    },
++                )
++            })
++        };
++        #[cfg(not(target_os = "macos"))]
++        let macos_appearance = Subscription::none();
++
+         Subscription::batch([
+             event::listen_with(|event, _status, _window_id| match event {
+                 Event::Keyboard(KeyEvent::KeyPressed {
+@@ -3673,6 +3726,7 @@ impl Application for App {
+                 Some(dialog) => dialog.subscription(),
+                 None => Subscription::none(),
+             },
++            macos_appearance,
+         ])
+     }
+ }

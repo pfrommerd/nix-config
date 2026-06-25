@@ -48,10 +48,6 @@
       terminal.borderless = true;
     };
 
-    # Dark/light variants as home-manager specialisations. The base generation
-    # is dark (preferDark = true above); switch at runtime by activating one of
-    # the specialisations, e.g.
-    #   ~/.local/state/nix/profiles/home-manager/specialisation/light/activate
     specialisation = {
       dark.configuration.distro.theme.preferDark = true;
       light.configuration.distro.theme.preferDark = false;
@@ -85,28 +81,6 @@
       };
     };
 
-    home.file."${config.programs.pi-coding-agent.configDir}/extensions/sandbox.json".source =
-      (pkgs.formats.json { }).generate "pi-sandbox.json" {
-        enabled = true;
-        network = {
-          allowedDomains = [
-            "npmjs.org" "*.npmjs.org"
-            "registry.npmjs.org" "registry.yarnpkg.com"
-            "pypi.org" "*.pypi.org" "pip.pypa.io"
-            "pythonhosted.org" "*.pythonhosted.org"
-            "files.pythonhosted.org" "bootstrap.pypa.io"
-            "github.com" "*.github.com" "api.github.com" "raw.githubusercontent.com"
-          ];
-          deniedDomains = [ ];
-        };
-        filesystem = {
-          denyRead = [ "~/.ssh" "~/.aws" "~/.gnupg" ];
-          allowWrite = [ "." "/tmp" ];
-          denyWrite = [ ".env" ];
-        };
-        slurm.enabled = true;
-        gpu.enabled = true;
-      };
     programs.fish.enable = true;
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;

@@ -23,11 +23,17 @@ in {
   };
 
   config = lib.mkIf config.graphical {
-    # DejaVu Sans Mono is the cosmic-term font (see theme/cosmic-term.nix).
-    # Installed on every platform so the configured font always resolves; on
-    # macOS home-manager links it into ~/Library/Fonts where cosmic-term's
-    # fontdb can find it.
-    home.packages = with pkgs; [ dejavu_fonts ] ++ (if pkgs.stdenv.isLinux then [
+    # DejaVu Sans Mono for Powerline is the cosmic-term font (see
+    # theme/cosmic-term.nix). Installed on every platform so the configured font
+    # always resolves; on macOS home-manager links it into ~/Library/Fonts where
+    # cosmic-term's fontdb can find it.
+    #
+    # noto-fonts provides Noto Sans Symbols 2, which covers monochrome
+    # text-presentation symbols DejaVu lacks (notably U+23FA ⏺, Claude's
+    # message/tool bullet). cosmic-text's font fallback is patched on macOS (see
+    # overlay.nix) to prefer these symbol fonts ahead of the color emoji font,
+    # so the bullet renders monochrome instead of as a filled color block.
+    home.packages = with pkgs; [ powerline-fonts noto-fonts ] ++ (if pkgs.stdenv.isLinux then [
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
       eog chromium code-cursor

@@ -71,8 +71,9 @@ in {
         };
         opacity = builtins.floor (cfg.terminal.opacity * 100);
         show_headerbar = !cfg.terminal.borderless;
-        # cosmic-term's built-in default is Noto Sans Mono; use DejaVu instead.
-        font_name = "DejaVu Sans Mono";
+        # cosmic-term's built-in default is Noto Sans Mono; use the powerline
+        # patched DejaVu instead (from powerline-fonts) so powerline glyphs render.
+        font_name = "DejaVu Sans Mono for Powerline";
       };
     };
   };

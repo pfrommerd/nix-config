@@ -43,7 +43,7 @@
         macchina
       ];
 
-      fonts.packages = with pkgs; [ powerline-fonts powerline-symbols font-awesome ];
+      fonts.packages = with pkgs; [ powerline-fonts powerline-symbols font-awesome noto-fonts ];
 
       programs.nix-ld.enable = true;
       programs.nix-ld.libraries = [

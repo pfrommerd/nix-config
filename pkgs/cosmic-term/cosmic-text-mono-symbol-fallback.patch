@@ -1,0 +1,54 @@
+Prefer monochrome symbol fonts over color emoji for text-presentation glyphs.
+
+cosmic-text's font fallback lists place the color emoji font ahead of (macOS) or
+mismatch the family name of (unix) the monochrome symbol fonts. Codepoints that
+default to *text* presentation but also exist in the color emoji font -- notably
+U+23FA (BLACK CIRCLE FOR RECORD), which Claude Code prints as its message/tool
+bullet -- therefore resolve to the color emoji font and render as a filled color
+block with a solid background.
+
+The glyph lives in Noto Sans Symbols 2, whose real family name contains a space
+("Noto Sans Symbols 2"). fontdb matches family names exactly:
+
+  * macos.rs lists no symbol font at all before "Apple Color Emoji" -- add the
+    Noto symbol fonts (both spellings of the "2" variant) ahead of it.
+  * unix.rs already lists symbol fonts before "Noto Color Emoji" but only the
+    unspaced "Noto Sans Symbols2", which never matches -- add the spaced name.
+
+These symbol fonts cover technical/text symbols but not pictographic emoji, so
+real emoji (e.g. U+1F534) still resolve to the color emoji font.
+
+--- a/src/font/fallback/macos.rs
++++ b/src/font/fallback/macos.rs
+@@ -31,6 +31,17 @@
+     &[
+         ".SF NS",
+         "Menlo",
++        // Prefer monochrome symbol fonts for text-presentation glyphs (notably
++        // U+23FA, the bullet Claude Code prints) so they don't fall through to
++        // Apple Color Emoji and render as a filled color block. Mirrors the
++        // symbol fallbacks unix.rs lists ahead of "Noto Color Emoji". Note the
++        // glyph lives in "Noto Sans Symbols 2" (the family name has a space;
++        // the unspaced spelling is kept too in case fontdb reports it). These
++        // cover technical/text symbols but not pictographic emoji, so real
++        // emoji (e.g. U+1F534) still resolve to Apple Color Emoji just below.
++        "Noto Sans Symbols",
++        "Noto Sans Symbols 2",
++        "Noto Sans Symbols2",
+         "Apple Color Emoji",
+         "Geneva",
+         "Arial Unicode MS",
+--- a/src/font/fallback/unix.rs
++++ b/src/font/fallback/unix.rs
+@@ -42,6 +42,11 @@
+         /* Symbols fallbacks */
+         "Noto Sans Symbols",
+         "Noto Sans Symbols2",
++        // The Noto Sans Symbols 2 family name actually contains a space; the
++        // unspaced spelling above doesn't match it in fontdb. U+23FA (Claude
++        // Code's bullet) lives here, so without this it falls through to the
++        // color emoji font and renders as a filled block.
++        "Noto Sans Symbols 2",
+         /* Emoji fallbacks*/
+         "Noto Color Emoji",
+         //TODO: Add CJK script here for doublewides?

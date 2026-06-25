@@ -14,7 +14,23 @@ final: prev: {
           ./pkgs/cosmic-term/pass-ctrl-shift-to-terminal.patch
           # cfg!(macos)-gated; no-op on Linux.
           ./pkgs/cosmic-term/no-daemon-on-macos.patch
+          # cfg!(macos)-gated; no-op on Linux.
+          ./pkgs/cosmic-term/macos-follow-system-appearance.patch
         ];
+        # cosmic-text's font fallback orders the color emoji font ahead of (macOS
+        # macos.rs) or mismatches the family name of (unix.rs) the Noto symbol
+        # fonts, so text-presentation glyphs like U+23FA (Claude Code's bullet)
+        # render as a filled color block. Patch both fallback lists in the
+        # vendored crate. Registry vendor dirs ship an empty checksum `files`
+        # map, so editing in place is safe. Patching both files on both platforms
+        # is harmless — each file is only compiled on its own target_os.
+        cargoDeps = final.runCommandLocal "cosmic-term-1.0.16-vendor-cosmic-text-patched"
+          { nativeBuildInputs = [ final.gnupatch ]; }
+          ''
+            cp -r --no-preserve=mode,ownership ${old.cargoDeps} $out
+            patch -p1 -d $out/source-registry-0/cosmic-text-0.19.0 \
+              < ${./pkgs/cosmic-term/cosmic-text-mono-symbol-fallback.patch}
+          '';
       });
     in
     # cosmic-term is Linux-only upstream because the default feature set pulls
@@ -41,6 +57,8 @@ final: prev: {
         # ("view must be installed in a window") when iced queries the maximized
         # state. Patch the vendored crate in place — it's a git source with an
         # empty cargo checksum, so editing it doesn't break vendoring.
+        # Layer the winit fix on top of the cosmic-text-patched cargoDeps from
+        # `patched` (o.cargoDeps is already the runCommand output above).
         cargoDeps = final.runCommandLocal "cosmic-term-1.0.16-vendor-patched"
           { nativeBuildInputs = [ final.gnupatch ]; }
           ''
