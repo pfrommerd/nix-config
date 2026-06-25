@@ -3,6 +3,7 @@
   rustPlatform,
   fetchFromGitHub,
   cmake,
+  lld,
   pkg-config,
   protobuf,
   fontconfig,
@@ -153,6 +154,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     cargo-bundle
     rustPlatform.bindgenHook
+    lld
   ];
 
   dontUseCmakeConfigure = true;
@@ -208,6 +210,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # Used by `zed --version`
     RELEASE_VERSION = finalAttrs.version;
     LK_CUSTOM_WEBRTC = livekit-libwebrtc;
+  }
+  // lib.optionalAttrs stdenv.hostPlatform.isDarwin {
+    # Link with lld on Darwin. nixpkgs' classic open-source ld64 fails to insert
+    # ARM64 branch thunks for this binary, producing `b(l) ARM64 branch out of range`.
+    NIX_CFLAGS_LINK = "-fuse-ld=lld";
   };
 
   preBuild = ''
