@@ -38,7 +38,7 @@
 
     distro.theme = {
       enable = true;
-      preferDark = lib.mkDefault false;
+      preferDark = lib.mkDefault true;
       accent = "lavender";
       light.preset = "latte";
       dark.preset = "mocha";

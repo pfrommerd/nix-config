@@ -23,7 +23,11 @@ in {
   };
 
   config = lib.mkIf config.graphical {
-    home.packages = with pkgs; (if pkgs.stdenv.isLinux then [
+    # DejaVu Sans Mono is the cosmic-term font (see theme/cosmic-term.nix).
+    # Installed on every platform so the configured font always resolves; on
+    # macOS home-manager links it into ~/Library/Fonts where cosmic-term's
+    # fontdb can find it.
+    home.packages = with pkgs; [ dejavu_fonts ] ++ (if pkgs.stdenv.isLinux then [
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
       eog chromium code-cursor
@@ -52,5 +56,20 @@ in {
     # themed terminal without pulling in the rest of COSMIC.
     wayland.desktopManager.cosmic.enable = lib.mkIf isDarwin true;
     programs.cosmic-term.enable = lib.mkIf isDarwin true;
+
+    # cosmic-manager applies config via `cosmic-ctl`, which resolves paths with
+    # etcetera's XDG base strategy: it defaults to ~/.config and only honours
+    # $XDG_CONFIG_HOME. On macOS the COSMIC apps themselves read their config
+    # from ~/Library/Application Support/cosmic, so without this the generated
+    # files land in ~/.config/cosmic where nothing reads them. Point cosmic-ctl
+    # at the macOS location for the cosmic activation steps. This export persists
+    # into the subsequent activation entries (home-manager runs them in one
+    # shell), so resetCosmic/configureCosmic both see it.
+    home.activation.cosmicMacosConfigHome = lib.mkIf isDarwin (
+      config.lib.dag.entryBefore
+        ([ "configureCosmic" ]
+          ++ lib.optional config.wayland.desktopManager.cosmic.resetFiles "resetCosmic")
+        ''export XDG_CONFIG_HOME="$HOME/Library/Application Support"''
+    );
   };
 }

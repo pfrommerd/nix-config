@@ -52,6 +52,10 @@ in {
           name = "Default";
           syntax_theme_dark = cfg.dark.name;
           syntax_theme_light = cfg.light.name;
+          # New terminals (including the first one at launch) open here. Without
+          # this cosmic-term inherits the launching process's cwd; on macOS it is
+          # spawned by skhd/launchd with cwd `/`, so terminals opened at `/`.
+          working_directory = config.home.homeDirectory;
         }
       ];
       colorSchemes = [
@@ -67,6 +71,8 @@ in {
         };
         opacity = builtins.floor (cfg.terminal.opacity * 100);
         show_headerbar = !cfg.terminal.borderless;
+        # cosmic-term's built-in default is Noto Sans Mono; use DejaVu instead.
+        font_name = "DejaVu Sans Mono";
       };
     };
   };
