@@ -1,0 +1,46 @@
+--- a/src/terminal.rs
++++ b/src/terminal.rs
+@@ -251,6 +251,9 @@
+     buffer: Arc<Buffer>,
+     is_focused: bool,
+     colors: Colors,
++    /// Last light/dark kind reported to the terminal, used to emit CSI 2031
++    /// color-scheme change notifications when it changes.
++    color_scheme_kind: Option<ColorSchemeKind>,
+     default_attrs: Attrs<'static>,
+     dim_font_weight: Weight,
+     mouse_reporter: MouseReporter,
+@@ -348,6 +351,7 @@
+             bold_font_weight: Weight(bold_font_weight),
+             buffer: Arc::new(buffer),
+             colors,
++            color_scheme_kind: None,
+             context_menu: None,
+             default_attrs,
+             dim_font_weight: Weight(dim_font_weight),
+@@ -618,6 +622,25 @@
+         let mut update_cell_size = false;
+         let mut update = false;
+         let zoom_adj = self.zoom_adj;
++
++        // CSI 2031: keep the terminal's light/dark preference current and, when
++        // it changes, notify applications that opted in with `CSI ? 2031 h` by
++        // emitting `CSI ? 997 ; 1 n` (dark) or `CSI ? 997 ; 2 n` (light).
++        let color_scheme_kind = config.syntax_theme(self.profile_id_opt).1;
++        if self.color_scheme_kind != Some(color_scheme_kind) {
++            let previous = self.color_scheme_kind.replace(color_scheme_kind);
++            let dark = matches!(color_scheme_kind, ColorSchemeKind::Dark);
++            let report_enabled = {
++                let mut term = self.term.lock();
++                term.set_color_preference_dark(dark);
++                term.mode().contains(TermMode::COLOR_SCHEME_UPDATES)
++            };
++            // Only emit on an actual change, not the initial configuration.
++            if previous.is_some() && report_enabled {
++                let param = if dark { 1 } else { 2 };
++                self.input_no_scroll(format!("\x1b[?997;{param}n").into_bytes());
++            }
++        }
+         if self.default_attrs.stretch != config.typed_font_stretch() {
+             self.default_attrs = self
+                 .default_attrs

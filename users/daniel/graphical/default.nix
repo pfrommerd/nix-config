@@ -53,6 +53,18 @@ in {
         buffer_font_size = 14;
         buffer_font_features = { calt = false; };
       };
+      userKeymaps = [
+        # jkl; navigation (hjkl shifted one key right), matching the Helix setup.
+        {
+          context = "VimControl && !menu";
+          bindings = {
+            "j" = "vim::Left";
+            "k" = "vim::Down";
+            "l" = "vim::Up";
+            ";" = "vim::Right";
+          };
+        }
+      ];
     };
     # Terminal: cosmic-term everywhere (alacritty retired).
     # On Linux it's enabled by the COSMIC desktop (see desktop.nix). On macOS

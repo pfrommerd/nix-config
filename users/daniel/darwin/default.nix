@@ -8,8 +8,14 @@ let darwin-scripts = pkgs.stdenv.mkDerivation {
        mkdir $out
        cp -r . $out/bin
     '';
-  }; 
-in { 
+  };
+  # Pull the accent highlight from daniel's theme so borders match the
+  # active (dark/light) preset. Colors are jankyborders' 0xAARRGGBB format.
+  theme = config.home-manager.users.daniel.distro.theme;
+  activeTheme = if theme.preferDark then theme.dark else theme.light;
+  accentHex = lib.removePrefix "#" activeTheme.palette.${activeTheme.accent};
+  mkBorderColor = alpha: "0x${alpha}${accentHex}";
+in {
   config = {
 	  environment.systemPackages = [ darwin-scripts pkgs.fish ];
           system.primaryUser = "daniel";
@@ -42,8 +48,8 @@ in {
 	    window_gap          = 8;
 	  };
 	  services.jankyborders.enable = true;
-	  services.jankyborders.active_color = "0xffc79e5d";
-	  services.jankyborders.inactive_color = "0x00c79e5d";
+	  services.jankyborders.active_color = mkBorderColor "ff";
+	  services.jankyborders.inactive_color = mkBorderColor "00";
 	  services.jankyborders.width = 5.0;
 	   
 	  system.defaults.dock.autohide = true;

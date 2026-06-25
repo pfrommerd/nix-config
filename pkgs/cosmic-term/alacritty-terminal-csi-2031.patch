@@ -1,0 +1,88 @@
+--- a/src/term/mod.rs
++++ b/src/term/mod.rs
+@@ -77,6 +77,7 @@
+         const REPORT_ALTERNATE_KEYS   = 1 << 20;
+         const REPORT_ALL_KEYS_AS_ESC  = 1 << 21;
+         const REPORT_ASSOCIATED_TEXT  = 1 << 22;
++        const COLOR_SCHEME_UPDATES    = 1 << 23;
+         const MOUSE_MODE              = Self::MOUSE_REPORT_CLICK.bits() | Self::MOUSE_MOTION.bits() | Self::MOUSE_DRAG.bits();
+         const KITTY_KEYBOARD_PROTOCOL = Self::DISAMBIGUATE_ESC_CODES.bits()
+                                       | Self::REPORT_EVENT_TYPES.bits()
+@@ -327,6 +328,11 @@
+ 
+     /// Config directly for the terminal.
+     config: Config,
++
++    /// Current light/dark color preference, reported to applications that
++    /// request it via the CSI 2031 / DSR `CSI ? 996 n` protocol. `true` means
++    /// the terminal is currently using a dark theme.
++    color_preference_dark: bool,
+ }
+ 
+ /// Configuration options for the [`Term`].
+@@ -441,7 +447,19 @@
+             selection: Default::default(),
+             title: Default::default(),
+             mode: Default::default(),
++            color_preference_dark: true,
+         }
++    }
++
++    /// Set the current light/dark color preference reported to applications via
++    /// the CSI 2031 protocol. `dark` is `true` for a dark theme.
++    ///
++    /// This only updates the stored preference; emitting the `CSI ? 997` change
++    /// notification (when [`TermMode::COLOR_SCHEME_UPDATES`] is set) is left to
++    /// the embedder, which drives theme changes.
++    #[inline]
++    pub fn set_color_preference_dark(&mut self, dark: bool) {
++        self.color_preference_dark = dark;
+     }
+ 
+     /// Collect the information about the changes in the lines, which
+@@ -1343,6 +1361,15 @@
+             },
+             _ => debug!("unknown device status query: {arg}"),
+         };
++    }
++
++    /// Report the current light/dark color preference (answer to `CSI ? 996 n`).
++    #[inline]
++    fn report_color_preference(&mut self) {
++        let param = if self.color_preference_dark { 1 } else { 2 };
++        trace!("Reporting color preference: {param}");
++        let text = format!("\x1b[?997;{param}n");
++        self.event_proxy.send_event(Event::PtyWrite(text));
+     }
+ 
+     #[inline]
+@@ -1989,6 +2016,9 @@
+                 style.blinking = true;
+                 self.event_proxy.send_event(Event::CursorBlinkingChange);
+             },
++            NamedPrivateMode::ColorSchemeUpdates => {
++                self.mode.insert(TermMode::COLOR_SCHEME_UPDATES)
++            },
+             NamedPrivateMode::SyncUpdate => (),
+         }
+     }
+@@ -2038,6 +2068,9 @@
+                 style.blinking = false;
+                 self.event_proxy.send_event(Event::CursorBlinkingChange);
+             },
++            NamedPrivateMode::ColorSchemeUpdates => {
++                self.mode.remove(TermMode::COLOR_SCHEME_UPDATES)
++            },
+             NamedPrivateMode::SyncUpdate => (),
+         }
+     }
+@@ -2080,6 +2113,9 @@
+                 },
+                 NamedPrivateMode::BracketedPaste => {
+                     self.mode.contains(TermMode::BRACKETED_PASTE).into()
++                },
++                NamedPrivateMode::ColorSchemeUpdates => {
++                    self.mode.contains(TermMode::COLOR_SCHEME_UPDATES).into()
+                 },
+                 NamedPrivateMode::SyncUpdate => ModeState::Reset,
+                 NamedPrivateMode::ColumnMode => ModeState::NotSupported,

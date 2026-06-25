@@ -10,6 +10,7 @@ in
     ./zellij.nix
     ./cosmic-term.nix
     ./cosmic-comp.nix
+    ./helix.nix
     ./pi.nix
   ];
   options.distro.theme = {

@@ -16,6 +16,11 @@ final: prev: {
           ./pkgs/cosmic-term/no-daemon-on-macos.patch
           # cfg!(macos)-gated; no-op on Linux.
           ./pkgs/cosmic-term/macos-follow-system-appearance.patch
+          # CSI 2031 light/dark change notifications (pop-os/cosmic-term#423):
+          # emit `CSI ? 997 ; N n` when the profile theme switches. Pairs with
+          # the vendored vte/alacritty_terminal patches below, which add mode
+          # 2031 + the `CSI ? 996 n` query to the terminal backend.
+          ./pkgs/cosmic-term/csi-2031-color-scheme-updates.patch
         ];
         # cosmic-text's font fallback orders the color emoji font ahead of (macOS
         # macos.rs) or mismatches the family name of (unix.rs) the Noto symbol
@@ -30,6 +35,15 @@ final: prev: {
             cp -r --no-preserve=mode,ownership ${old.cargoDeps} $out
             patch -p1 -d $out/source-registry-0/cosmic-text-0.19.0 \
               < ${./pkgs/cosmic-term/cosmic-text-mono-symbol-fallback.patch}
+            # CSI 2031 support in the terminal backend (pop-os/cosmic-term#423):
+            # vte gains private mode 2031 + the `CSI ? 996 n` color-preference
+            # query; alacritty_terminal tracks the COLOR_SCHEME_UPDATES mode and
+            # answers the query with `CSI ? 997 ; N n`. Registry vendor dirs ship
+            # an empty checksum `files` map, so editing in place is safe.
+            patch -p1 -d $out/source-registry-0/vte-0.15.0 \
+              < ${./pkgs/cosmic-term/vte-csi-2031.patch}
+            patch -p1 -d $out/source-registry-0/alacritty_terminal-0.25.1 \
+              < ${./pkgs/cosmic-term/alacritty-terminal-csi-2031.patch}
           '';
       });
     in

@@ -26,7 +26,7 @@
     ]; # fmt: skip
 
     home.sessionVariables = {
-      EDITOR = "nvim";
+      EDITOR = "hx";
       COLORTERM = "truecolor";
     };
 
@@ -57,14 +57,34 @@
     programs.git.lfs.enable = true;
     programs.man.package = pkgs.man;
 
-    programs.neovim = {
+    programs.helix = {
       enable = true;
-      vimAlias = true;
-      extraConfig = ''
-        highlight Normal guibg=NONE
-        set tabstop=4
-        set expandtab
-      '';
+      package = pkgs.evil-helix;
+      settings = {
+        editor.indent-guides.render = true;
+        keys =
+          let
+            movement = {
+              j = "move_char_left";
+              k = "move_visual_line_down";
+              l = "move_visual_line_up";
+              ";" = "move_char_right";
+            };
+          in
+          {
+            normal = movement // {
+              D = [
+                "ensure_selections_forward"
+                "extend_to_line_end"
+                "delete_selection"
+              ];
+            };
+            # Ctrl-C leaves insert mode.
+            insert = {
+              C-c = "normal_mode";
+            };
+          };
+      };
     };
     programs.pi-coding-agent = {
       enable = true;
