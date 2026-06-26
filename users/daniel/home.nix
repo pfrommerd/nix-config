@@ -73,6 +73,9 @@
           in
           {
             normal = movement // {
+              H = "goto_window_top";
+              M = "goto_window_center";
+              L = "goto_window_bottom";
               D = [
                 "ensure_selections_forward"
                 "extend_to_line_end"
@@ -86,21 +89,6 @@
           };
       };
     };
-    programs.pi-coding-agent = {
-      enable = true;
-      settings = {
-        quietStartup = true;
-        packages = [
-          "git:git@github.com:pfrommerd/pi-autoresearch.git"
-          "npm:@narumitw/pi-codex-usage"
-        ];
-        compaction = {
-          enabled = true;
-          reserveTokens = 16384;
-        };
-      };
-    };
-
     programs.fish.enable = true;
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
