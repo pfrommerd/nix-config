@@ -73,6 +73,7 @@
           in
           {
             normal = movement // {
+              s = "change_selection";
               H = "goto_window_top";
               M = "goto_window_center";
               L = "goto_window_bottom";
