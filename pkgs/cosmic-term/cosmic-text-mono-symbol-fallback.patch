@@ -1,43 +1,58 @@
-Prefer monochrome symbol fonts over color emoji for text-presentation glyphs.
+Prefer Linux terminal font fallbacks over Apple emoji/system glyphs.
 
-cosmic-text's font fallback lists place the color emoji font ahead of (macOS) or
-mismatch the family name of (unix) the monochrome symbol fonts. Codepoints that
-default to *text* presentation but also exist in the color emoji font -- notably
-U+23FA (BLACK CIRCLE FOR RECORD), which Claude Code prints as its message/tool
-bullet -- therefore resolve to the color emoji font and render as a filled color
-block with a solid background.
+cosmic-text's macOS fallback list jumps from Apple UI/terminal fonts directly to
+Apple Color Emoji. In cosmic-term that means terminal glyphs can be resolved from
+a different provider on macOS than on Linux; zellij box-drawing borders can come
+from Menlo/Apple fonts instead of the Noto/DejaVu terminal fallback chain used on
+Linux, and text-presentation symbols can fall through to Apple Color Emoji.
 
-The glyph lives in Noto Sans Symbols 2, whose real family name contains a space
-("Noto Sans Symbols 2"). fontdb matches family names exactly:
+Put the same common Linux fallback families first on macOS, then keep the native
+Apple fallbacks. This keeps terminal glyphs such as U+2502 (BOX DRAWINGS LIGHT
+VERTICAL) and U+23FA (BLACK CIRCLE FOR RECORD, Claude Code's message/tool
+bullet) in the installed Noto/DejaVu monochrome fonts before Apple-specific
+fallbacks are considered.
 
-  * macos.rs lists no symbol font at all before "Apple Color Emoji" -- add the
-    Noto symbol fonts (both spellings of the "2" variant) ahead of it.
-  * unix.rs already lists symbol fonts before "Noto Color Emoji" but only the
-    unspaced "Noto Sans Symbols2", which never matches -- add the spaced name.
+The U+23FA glyph lives in Noto Sans Symbols 2, whose real family name contains a
+space ("Noto Sans Symbols 2"). fontdb matches family names exactly, while
+cosmic-text's unix.rs only includes the unspaced "Noto Sans Symbols2"; keep that
+unix fix as well. The macOS Braille script fallback is also aligned with Unix's
+FreeMono fallback so spinner glyphs stay monospaced.
 
 These symbol fonts cover technical/text symbols but not pictographic emoji, so
 real emoji (e.g. U+1F534) still resolve to the color emoji font.
 
 --- a/src/font/fallback/macos.rs
 +++ b/src/font/fallback/macos.rs
-@@ -31,6 +31,17 @@
+@@ -31,6 +31,19 @@
      &[
-         ".SF NS",
-         "Menlo",
-+        // Prefer monochrome symbol fonts for text-presentation glyphs (notably
-+        // U+23FA, the bullet Claude Code prints) so they don't fall through to
-+        // Apple Color Emoji and render as a filled color block. Mirrors the
-+        // symbol fallbacks unix.rs lists ahead of "Noto Color Emoji". Note the
-+        // glyph lives in "Noto Sans Symbols 2" (the family name has a space;
-+        // the unspaced spelling is kept too in case fontdb reports it). These
-+        // cover technical/text symbols but not pictographic emoji, so real
-+        // emoji (e.g. U+1F534) still resolve to Apple Color Emoji just below.
++        // Match the Linux common fallback order first so terminal glyphs (box
++        // drawing, powerline-adjacent symbols, text-presentation symbols) use
++        // the same installed Noto/DejaVu providers on macOS before falling back
++        // to Apple UI fonts or Apple Color Emoji.
++        "Noto Sans",
++        "DejaVu Sans",
++        "FreeSans",
++        "Noto Sans Mono",
++        "DejaVu Sans Mono",
++        "FreeMono",
 +        "Noto Sans Symbols",
 +        "Noto Sans Symbols 2",
 +        "Noto Sans Symbols2",
+         ".SF NS",
+         "Menlo",
          "Apple Color Emoji",
          "Geneva",
          "Arial Unicode MS",
+@@ -65,6 +78,9 @@
+         Script::Adlam => &["Noto Sans Adlam"],
+         Script::Arabic => &["Geeza Pro"],
+         Script::Armenian => &["Noto Sans Armenian"],
++        // Match Unix: Braille glyphs are common terminal spinner characters,
++        // and FreeMono avoids proportional fallback alignment changes.
++        Script::Braille => &["FreeMono"],
+         Script::Bengali => &["Bangla Sangam MN"],
+         Script::Buhid => &["Noto Sans Buhid"],
+         Script::Canadian_Aboriginal => &["Euphemia UCAS"],
 --- a/src/font/fallback/unix.rs
 +++ b/src/font/fallback/unix.rs
 @@ -42,6 +42,11 @@

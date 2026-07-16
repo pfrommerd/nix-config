@@ -18,7 +18,7 @@
              context_menu: None,
              default_attrs,
              dim_font_weight: Weight(dim_font_weight),
-@@ -618,6 +622,25 @@
+@@ -618,6 +622,24 @@
          let mut update_cell_size = false;
          let mut update = false;
          let zoom_adj = self.zoom_adj;
@@ -26,7 +26,6 @@
 +        // CSI 2031: keep the terminal's light/dark preference current and, when
 +        // it changes, notify applications that opted in with `CSI ? 2031 h` by
 +        // emitting `CSI ? 997 ; 1 n` (dark) or `CSI ? 997 ; 2 n` (light).
-+        let color_scheme_kind = config.syntax_theme(self.profile_id_opt).1;
 +        if self.color_scheme_kind != Some(color_scheme_kind) {
 +            let previous = self.color_scheme_kind.replace(color_scheme_kind);
 +            let dark = matches!(color_scheme_kind, ColorSchemeKind::Dark);

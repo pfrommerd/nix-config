@@ -1,0 +1,192 @@
+Draw terminal box-drawing characters to full cell boundaries.
+
+cosmic-term renders terminal rows as shaped text. That leaves box-drawing
+characters at the mercy of the selected font's glyph bounds; with a normal
+terminal line height, vertical border glyphs such as U+2502 can leave small gaps
+between rows. Draw the common box-drawing set as simple terminal primitives over
+the font glyphs so panes and zellij frames connect at cell edges.
+
+--- a/src/terminal_box.rs
++++ b/src/terminal_box.rs
+@@ -719,6 +719,22 @@
+             position: view_position,
+             color: Color::from_rgba(1.0, 1.0, 1.0, 1.0), // TODO
+             clip_bounds: Rectangle::new(view_position, Size::new(view_w as f32, view_h as f32)),
++        });
++
++        // Font glyphs for box-drawing characters often do not fill the terminal
++        // line height, leaving visible gaps between adjacent rows. Overlay the
++        // common box-drawing characters as cell-aligned primitives so terminal
++        // frames connect exactly.
++        terminal.with_buffer(|buffer| {
++            for run in buffer.layout_runs() {
++                draw_box_drawing_run(
++                    renderer,
++                    &terminal,
++                    view_position,
++                    run,
++                    state.is_focused && !self.disabled,
++                );
++            }
+         });
+ 
+         // Draw scrollbar
+@@ -1725,6 +1741,158 @@
+     } else if terminal.active_regex_match.is_some() {
+         terminal.active_regex_match = None;
+         terminal.needs_update = true;
++    }
++}
++
++
++#[derive(Clone, Copy)]
++struct BoxSegments {
++    left: bool,
++    right: bool,
++    up: bool,
++    down: bool,
++    heavy: bool,
++}
++
++impl BoxSegments {
++    const fn new(left: bool, right: bool, up: bool, down: bool) -> Self {
++        Self {
++            left,
++            right,
++            up,
++            down,
++            heavy: false,
++        }
++    }
++
++    const fn heavy(mut self) -> Self {
++        self.heavy = true;
++        self
++    }
++}
++
++fn box_segments(c: char) -> Option<BoxSegments> {
++    let segments = match c {
++        '\u{2500}' => BoxSegments::new(true, true, false, false),
++        '\u{2502}' => BoxSegments::new(false, false, true, true),
++        '\u{250C}' | '\u{256D}' => BoxSegments::new(false, true, false, true),
++        '\u{2510}' | '\u{256E}' => BoxSegments::new(true, false, false, true),
++        '\u{2514}' | '\u{2570}' => BoxSegments::new(false, true, true, false),
++        '\u{2518}' | '\u{256F}' => BoxSegments::new(true, false, true, false),
++        '\u{251C}' => BoxSegments::new(false, true, true, true),
++        '\u{2524}' => BoxSegments::new(true, false, true, true),
++        '\u{252C}' => BoxSegments::new(true, true, false, true),
++        '\u{2534}' => BoxSegments::new(true, true, true, false),
++        '\u{253C}' => BoxSegments::new(true, true, true, true),
++        '\u{2501}' => BoxSegments::new(true, true, false, false).heavy(),
++        '\u{2503}' => BoxSegments::new(false, false, true, true).heavy(),
++        '\u{250F}' => BoxSegments::new(false, true, false, true).heavy(),
++        '\u{2513}' => BoxSegments::new(true, false, false, true).heavy(),
++        '\u{2517}' => BoxSegments::new(false, true, true, false).heavy(),
++        '\u{251B}' => BoxSegments::new(true, false, true, false).heavy(),
++        '\u{2523}' => BoxSegments::new(false, true, true, true).heavy(),
++        '\u{252B}' => BoxSegments::new(true, false, true, true).heavy(),
++        '\u{2533}' => BoxSegments::new(true, true, false, true).heavy(),
++        '\u{253B}' => BoxSegments::new(true, true, true, false).heavy(),
++        '\u{254B}' => BoxSegments::new(true, true, true, true).heavy(),
++        '\u{2550}' => BoxSegments::new(true, true, false, false).heavy(),
++        '\u{2551}' => BoxSegments::new(false, false, true, true).heavy(),
++        '\u{2554}' => BoxSegments::new(false, true, false, true).heavy(),
++        '\u{2557}' => BoxSegments::new(true, false, false, true).heavy(),
++        '\u{255A}' => BoxSegments::new(false, true, true, false).heavy(),
++        '\u{255D}' => BoxSegments::new(true, false, true, false).heavy(),
++        '\u{2560}' => BoxSegments::new(false, true, true, true).heavy(),
++        '\u{2563}' => BoxSegments::new(true, false, true, true).heavy(),
++        '\u{2566}' => BoxSegments::new(true, true, false, true).heavy(),
++        '\u{2569}' => BoxSegments::new(true, true, true, false).heavy(),
++        '\u{256C}' => BoxSegments::new(true, true, true, true).heavy(),
++        _ => return None,
++    };
++    Some(segments)
++}
++
++fn draw_box_drawing_run<Renderer: renderer::Renderer>(
++    renderer: &mut Renderer,
++    terminal: &Terminal,
++    view_position: Point,
++    run: cosmic_text::LayoutRun<'_>,
++    is_focused: bool,
++) {
++    let size = terminal.size();
++    let cell_width = size.cell_width;
++    let cell_height = size.cell_height;
++
++    for glyph in run.glyphs {
++        let Some(c) = run
++            .text
++            .get(glyph.start..glyph.end)
++            .and_then(|text| text.chars().next())
++        else {
++            continue;
++        };
++        let Some(segments) = box_segments(c) else {
++            continue;
++        };
++
++        let color = shade(
++            glyph
++                .color_opt
++                .unwrap_or_else(|| cosmic_text::Color::rgb(255, 255, 255)),
++            is_focused,
++        );
++        let color = Color::from_rgba(
++            f32::from(color.r()) / 255.0,
++            f32::from(color.g()) / 255.0,
++            f32::from(color.b()) / 255.0,
++            f32::from(color.a()) / 255.0,
++        );
++
++        let stroke = if segments.heavy {
++            (cell_width.min(cell_height) / 5.5).clamp(2.0, 5.0)
++        } else {
++            (cell_width.min(cell_height) / 9.0).clamp(1.0, 2.0)
++        };
++        let x = view_position.x + glyph.x;
++        let y = view_position.y + run.line_top;
++        let center_x = x + cell_width / 2.0;
++        let center_y = y + cell_height / 2.0;
++        let half = stroke / 2.0;
++
++        let mut fill = |bounds: Rectangle| {
++            renderer.fill_quad(
++                Quad {
++                    bounds,
++                    snap: true,
++                    ..Default::default()
++                },
++                color,
++            );
++        };
++
++        if segments.left {
++            fill(Rectangle::new(
++                Point::new(x, center_y - half),
++                Size::new(cell_width / 2.0 + half, stroke),
++            ));
++        }
++        if segments.right {
++            fill(Rectangle::new(
++                Point::new(center_x - half, center_y - half),
++                Size::new(cell_width / 2.0 + half, stroke),
++            ));
++        }
++        if segments.up {
++            fill(Rectangle::new(
++                Point::new(center_x - half, y),
++                Size::new(stroke, cell_height / 2.0 + half),
++            ));
++        }
++        if segments.down {
++            fill(Rectangle::new(
++                Point::new(center_x - half, center_y - half),
++                Size::new(stroke, cell_height / 2.0 + half),
++            ));
++        }
+     }
+ }
+ 

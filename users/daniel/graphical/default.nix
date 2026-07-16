@@ -33,7 +33,10 @@ in {
     # message/tool bullet). cosmic-text's font fallback is patched on macOS (see
     # overlay.nix) to prefer these symbol fonts ahead of the color emoji font,
     # so the bullet renders monochrome instead of as a filled color block.
-    home.packages = with pkgs; [ powerline-fonts noto-fonts ] ++ (if pkgs.stdenv.isLinux then [
+    #
+    # freefont_ttf provides FreeMono, matching cosmic-text's Linux Braille
+    # fallback so spinner glyphs stay monospaced on macOS too.
+    home.packages = with pkgs; [ powerline-fonts noto-fonts freefont_ttf ] ++ (if pkgs.stdenv.isLinux then [
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
       eog chromium code-cursor

@@ -16,19 +16,23 @@ final: prev: {
           ./pkgs/cosmic-term/no-daemon-on-macos.patch
           # cfg!(macos)-gated; no-op on Linux.
           ./pkgs/cosmic-term/macos-follow-system-appearance.patch
+          # Draw box-drawing characters as terminal cell primitives so pane
+          # frames connect across rows instead of depending on font glyph bounds.
+          ./pkgs/cosmic-term/terminal-box-drawing-overlay.patch
           # CSI 2031 light/dark change notifications (pop-os/cosmic-term#423):
           # emit `CSI ? 997 ; N n` when the profile theme switches. Pairs with
           # the vendored vte/alacritty_terminal patches below, which add mode
           # 2031 + the `CSI ? 996 n` query to the terminal backend.
           ./pkgs/cosmic-term/csi-2031-color-scheme-updates.patch
         ];
-        # cosmic-text's font fallback orders the color emoji font ahead of (macOS
-        # macos.rs) or mismatches the family name of (unix.rs) the Noto symbol
-        # fonts, so text-presentation glyphs like U+23FA (Claude Code's bullet)
-        # render as a filled color block. Patch both fallback lists in the
-        # vendored crate. Registry vendor dirs ship an empty checksum `files`
-        # map, so editing in place is safe. Patching both files on both platforms
-        # is harmless — each file is only compiled on its own target_os.
+        # cosmic-text's macOS common fallback uses Apple UI/terminal fonts before
+        # the Linux Noto/DejaVu terminal fallback chain, so terminal glyphs can
+        # render differently from Linux (notably box drawing in zellij). It can
+        # also reach Apple Color Emoji for text-presentation symbols like U+23FA
+        # (Claude Code's bullet). Patch the vendored fallback lists so macOS
+        # prefers the same Noto/DejaVu families as Linux, while also fixing the
+        # Noto Sans Symbols 2 family spelling on Unix. Registry vendor dirs ship
+        # an empty checksum `files` map, so editing in place is safe.
         cargoDeps = final.runCommandLocal "cosmic-term-1.0.16-vendor-cosmic-text-patched"
           { nativeBuildInputs = [ final.gnupatch ]; }
           ''
