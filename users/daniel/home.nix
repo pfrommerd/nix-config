@@ -20,7 +20,7 @@
       htop file dig ffmpeg
       awscli fastfetch minio-client ripgrep
       # latex + typst
-      texlive.combined.scheme-full typst
+      texliveFull typst
       # agentic tooling
       tmux cursor-cli
     ]; # fmt: skip
