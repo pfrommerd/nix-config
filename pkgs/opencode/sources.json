@@ -1,0 +1,21 @@
+{
+  "version": "1.18.3",
+  "sources": {
+    "x86_64-linux": {
+      "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.3/opencode-linux-x64.tar.gz",
+      "hash": "sha256-YPJ7JnnwClEbZTn5fgJEivr1jZxm4kSCheoMUXyoRYM="
+    },
+    "aarch64-linux": {
+      "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.3/opencode-linux-arm64.tar.gz",
+      "hash": "sha256-2gpjEXTro4CyodUfnTZPo4EtpDPnJ0PHJHHUtdpZxp0="
+    },
+    "x86_64-darwin": {
+      "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.3/opencode-darwin-x64.zip",
+      "hash": "sha256-TqFHhnuhnk7ANVnfVXgR8WdPQHiK6k0QMm3FY7dmfG0="
+    },
+    "aarch64-darwin": {
+      "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.3/opencode-darwin-arm64.zip",
+      "hash": "sha256-lG9isVVji5ERRLe+9SDuSmRC9pYpeQeHNGO8o1JOQO8="
+    }
+  }
+}

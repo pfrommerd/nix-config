@@ -3,9 +3,11 @@
   ...
 }:
 final: prev: {
+  claude-code = (final.callPackage ./pkgs/claude-code { });
   code-cursor = (final.callPackage ./pkgs/code-cursor { });
+  codex = (final.callPackage ./pkgs/codex { });
   cursor-cli = (final.callPackage ./pkgs/cursor-cli { });
-  pi-coding-agent = (final.callPackage ./pkgs/pi-coding-agent { });
+  opencode = (final.callPackage ./pkgs/opencode { });
   zed-editor = (final.callPackage ./pkgs/zed-editor { });
   cosmic-term =
     let

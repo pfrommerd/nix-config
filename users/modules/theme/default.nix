@@ -11,7 +11,6 @@ in
     ./cosmic-term.nix
     ./cosmic-comp.nix
     ./helix.nix
-    ./pi.nix
   ];
   options.distro.theme = {
     enable = lib.mkOption {

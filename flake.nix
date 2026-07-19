@@ -94,11 +94,19 @@
     # The jobsets
     packages = eachPlatform (platform:
       let
+        pkgs = nixpkgs.legacyPackages.${platform};
         # get the coreutils packages
-        bash = nixpkgs.legacyPackages.${platform}.bash;
+        bash = pkgs.bash;
         platformHosts = (lib.mapAttrs (name: host: mkSystem host)
           (lib.filterAttrs (name: config: config.system == platform) configs));
-      in if platformHosts == {} then {} else {
+        # `nix run .#update` refreshes every pkgs/*/sources.json in the working
+        # tree by invoking each package's update.py (see ./update.sh).
+        update = pkgs.writeShellApplication {
+          name = "update";
+          runtimeInputs = [ pkgs.uv pkgs.nix pkgs.nix-prefetch-github pkgs.git ];
+          text = builtins.readFile ./update.sh;
+        };
+      in { inherit update; } // (if platformHosts == {} then {} else {
         ci = derivation {
             name = "${platform}-ci";
             builder = "${bash}/bin/bash";
@@ -109,7 +117,7 @@
                 platformHosts
             );
         };
-      }
+      })
     );
     # expose all of the packages from the nixpkgs
     legacyPackages = eachPlatform (
