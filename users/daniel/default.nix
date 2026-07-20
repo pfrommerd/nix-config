@@ -57,11 +57,11 @@ in
           "docker"
         ];
         hashedPasswordFile = config.age.secrets.daniel-passwd.path;
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILjasIJq1MDgp06wRwV1rfx+flR5BYwGZv2QumH2hyjA dan.pfrommer@gmail.com"
+        ];
       };
       nix.settings.trusted-users = lib.optionals cfg.sudo [ "daniel" ];
-      environment.systemPackages = with pkgs; [
-        bubblewrap
-      ];
       # Enable home-manager for daniel
       home-manager.users.daniel =
         { ... }:

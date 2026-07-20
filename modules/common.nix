@@ -22,10 +22,12 @@
       cfg = config.distro.common;
     in
     lib.mkIf cfg.enable {
-
       age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
       virtualisation.docker.enable = true;
 
+      # eanble ssh-key based login
+      security.pam.sshAgentAuth.enable = true;
+      security.pam.services.sudo.sshAgentAuth = true;
       # Common to all "flavors"
       services.tailscale.enable = lib.mkOverride 500 true;
       services.resolved.enable = lib.mkOverride 500 true;
