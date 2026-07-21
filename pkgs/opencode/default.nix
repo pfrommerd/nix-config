@@ -1,6 +1,6 @@
 {
   lib,
-  stdenvNoCC,
+  stdenv,
   fetchurl,
   autoPatchelfHook,
   makeBinaryWrapper,
@@ -10,7 +10,7 @@
 }:
 
 let
-  inherit (stdenvNoCC) hostPlatform;
+  inherit (stdenv) hostPlatform;
   sourcesJson = lib.importJSON ./sources.json;
   sources = lib.mapAttrs (
     _: info:
@@ -19,7 +19,7 @@ let
     }
   ) sourcesJson.sources;
 in
-stdenvNoCC.mkDerivation {
+stdenv.mkDerivation {
   pname = "opencode";
   inherit (sourcesJson) version;
 
@@ -35,10 +35,9 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [
     makeBinaryWrapper
   ]
-  ++ lib.optionals hostPlatform.isLinux [ autoPatchelfHook ];
-
-  buildInputs = lib.optionals hostPlatform.isLinux [
-    stdenvNoCC.cc.cc.lib
+  ++ lib.optionals hostPlatform.isLinux [
+    autoPatchelfHook
+    stdenv.cc.cc.lib
     zlib
   ];
 
