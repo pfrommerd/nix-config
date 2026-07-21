@@ -6,6 +6,7 @@
   makeBinaryWrapper,
   ripgrep,
   sysctl,
+  unzip,
   zlib,
 }:
 
@@ -34,6 +35,9 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [
     makeBinaryWrapper
+  ]
+  ++ lib.optionals hostPlatform.isDarwin [
+    unzip
   ]
   ++ lib.optionals hostPlatform.isLinux [
     autoPatchelfHook
