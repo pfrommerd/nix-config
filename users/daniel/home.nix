@@ -22,7 +22,7 @@
       # latex + typst
       texliveFull typst
       # agentic tooling
-      tmux cursor-cli
+      tmux cursor-cli opencode codex claude
     ]; # fmt: skip
 
     home.sessionVariables = {
