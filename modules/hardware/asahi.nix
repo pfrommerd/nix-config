@@ -1,17 +1,12 @@
 { config, lib, pkgs, inputs, modulesPath, ... }:
 
 let firmware = pkgs.fetchurl {
-  url = "https://github.com/pfrommerd/nix-config-public/releases/download/macos-firmware-v1/all_firmware.tar.gz";
-  hash = "sha256-cetmMIx36P/Fx/LsSrIqs/zHZdnK6FG2y8MSZaFTCyA=";
-};
-kernel-cache = pkgs.fetchurl {
-  url = "https://github.com/pfrommerd/nix-config-public/releases/download/macos-firmware-v1/kernelcache.release.mac14j";
-  hash = "sha256-6nD7d52EPQEYcpNNJscyLre1TYDFtTNlDGaqtM+jDBE=";
+  url = "https://github.com/pfrommerd/nix-config-public/releases/download/macos-firmware-v2/firmware.cpio";
+  hash = "sha256-6HjH0aQiVSjTTrX4puroSf0CJlxVAfjD2NpQWVK8SyA=";
 };
 peripherals = pkgs.runCommand "asahi-peripherals" {} ''
   mkdir $out
-  cp ${firmware} $out/all_firmware.tar.gz
-  cp ${kernel-cache} $out/kernelcache.release.mac14j
+  cp ${firmware} $out/firmware.cpio
 '';
 in
 {
