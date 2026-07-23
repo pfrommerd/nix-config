@@ -43,7 +43,19 @@ in {
       signal-desktop caprine zed-alias
     ] else []) ++ (if pkgs.stdenv.isLinux && pkgs.stdenv.isx86_64 then [
       discord spotify slack
-    ] else []);
+    ] else []) ++ lib.optionals (config.restricted && pkgs.stdenv.isLinux) [
+      # A `restricted` config is home-manager-only, so there is no NixOS module
+      # (modules/graphical.nix -> services.desktopManager.cosmic) to provide the
+      # COSMIC session. Ship the DE stack in the user environment instead so
+      # `cosmic-session` can be launched from a home-manager-only login. Mirrors
+      # nixpkgs' services.desktopManager.cosmic corePkgs plus the useful
+      # apps/portals (greeter/initial-setup omitted — those need a display manager).
+      cosmic-session cosmic-comp cosmic-panel cosmic-settings cosmic-settings-daemon
+      cosmic-applets cosmic-app-library cosmic-bg cosmic-files cosmic-idle
+      cosmic-launcher cosmic-notifications cosmic-osd cosmic-workspaces-epoch xwayland
+      cosmic-edit cosmic-icons cosmic-randr cosmic-screenshot cosmic-term cosmic-wallpapers
+      pop-launcher xdg-desktop-portal-cosmic xdg-desktop-portal-gtk
+    ];
 
     programs.widevine.enable = pkgs.stdenv.isLinux;
     programs.firefox.enable = true;

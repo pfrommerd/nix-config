@@ -7,6 +7,12 @@
     ../modules/theme
   ];
 
+  options.restricted = lib.mkOption {
+    type = lib.types.bool;
+    default = false;
+    description = "Trim config for locked-down systems (drop claude-code/codex/opencode)";
+  };
+
   config = {
     home.packages = with pkgs; [
       # general tooling
@@ -22,8 +28,8 @@
       # latex + typst
       texliveFull typst
       # agentic tooling
-      tmux cursor-cli opencode codex claude-code
-    ]; # fmt: skip
+      tmux cursor-cli
+    ] ++ lib.optionals (!config.restricted) [ opencode codex claude-code ]; # fmt: skip
 
     home.sessionVariables = {
       EDITOR = "hx";
