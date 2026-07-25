@@ -3,6 +3,7 @@
   ...
 }:
 final: prev: {
+  evil-helix = (final.callPackage ./pkgs/evil-helix { });
   claude-code = (final.callPackage ./pkgs/claude-code { });
   code-cursor = (final.callPackage ./pkgs/code-cursor { });
   codex = (final.callPackage ./pkgs/codex { });

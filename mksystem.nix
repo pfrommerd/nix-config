@@ -5,7 +5,7 @@ rawDistroConfig:
 let system = rawDistroConfig.system;
     imports = rawDistroConfig.imports or [];
     util = import ./util;
-    distroConfig = builtins.removeAttrs rawDistroConfig ["system" "imports"];
+    distroConfig = removeAttrs rawDistroConfig ["system" "imports"];
 
     isDarwin = system == "aarch64-darwin";
     framework = if isDarwin then "nix-darwin" else "nixos";
@@ -15,7 +15,7 @@ let system = rawDistroConfig.system;
     systemFunc = if isDarwin then inputs.nix-darwin.lib.darwinSystem else inputs.nixpkgs.lib.nixosSystem;
     home-manager = if isDarwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
 
-in systemFunc rec {
+in systemFunc  {
   specialArgs = {
     inherit framework;
     inherit inputs;

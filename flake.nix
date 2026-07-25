@@ -18,7 +18,7 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, nixpkgs, home-manager, nix-darwin, ... } @ inputs :
+  outputs = { self, nixpkgs, home-manager,  ... } @ inputs :
   let mkSystem = import ./mksystem.nix {
         inherit self inputs;
       };
@@ -28,9 +28,6 @@
       platforms = lib.systems.flakeExposed;
       eachPlatform = lib.genAttrs platforms;
 
-      systems = lib.mapAttrsToList (name: config: config.system);
-      nameValuePair = name: value: { inherit name value; };
-      genAttrs = names: f: builtins.listToAttrs (map (n: nameValuePair n (f n)) names);
       attrValuesRecursive = set:
             let
               # Get top-level values
@@ -81,7 +78,7 @@
         value = mkHomeConfiguration user true;
       };
 
-  in rec {
+  in  {
     nixosConfigurations = builtins.mapAttrs (name: host: mkSystem host)
          (lib.filterAttrs (name: config: config.system != "aarch64-darwin" &&
                                    config.system != "x86_64-darwin") configs);
