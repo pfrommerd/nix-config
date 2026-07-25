@@ -26,8 +26,8 @@ rustPlatform.buildRustPackage (
     src = fetchFromGitHub {
       owner = "pfrommerd";
       repo = "evil-helix";
-      rev = "d9fb0cf4ba2ac6a7c607f7b3a81f13d4c172e7a7";
-      hash = "sha256-GlyGpEHgFYtPvc5MYTYrvuGM+pSoQgw9CrKQelMGMP8=";
+      rev = "f9e2b4dbab9930a3c4ebc471147da456be7bf214";
+      hash = "sha256-v79dZ/jnjKzvoLT4lfJOxXR+I4aOsWs/uQeYRjkZP84=";
     };
 
     cargoHash = "sha256-wNcntxShQgaqZWafrZ5roRQqTmhQobUdcvuW/o+mBXQ=";
