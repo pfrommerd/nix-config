@@ -24,7 +24,7 @@
       unzip zip gnutar
       wget curl tree killall
       htop file dig ffmpeg
-      awscli fastfetch minio-client ripgrep
+      awscli fastfetch jujutsu minio-client ripgrep
       # latex + typst
       texliveFull typst
       # agentic tooling
@@ -66,35 +66,6 @@
     programs.helix = {
       enable = true;
       package = pkgs.evil-helix;
-      settings = {
-        editor.indent-guides.render = true;
-        keys =
-          let
-            movement = {
-              j = "move_char_left";
-              k = "move_visual_line_down";
-              l = "move_visual_line_up";
-              ";" = "move_char_right";
-            };
-          in
-          {
-            normal = movement // {
-              s = "change_selection";
-              H = "goto_window_top";
-              M = "goto_window_center";
-              L = "goto_window_bottom";
-              D = [
-                "ensure_selections_forward"
-                "extend_to_line_end"
-                "delete_selection"
-              ];
-            };
-            # Ctrl-C leaves insert mode.
-            insert = {
-              C-c = "normal_mode";
-            };
-          };
-      };
     };
     programs.fish.enable = true;
     programs.zellij.enable = true;
