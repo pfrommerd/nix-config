@@ -27,10 +27,10 @@ rustPlatform.buildRustPackage (
       owner = "pfrommerd";
       repo = "evil-helix";
       rev = "45105db67ed121ab5c5ed6e8005fa25f473e0afe";
-      hash = "sha256-BEnT7nF+t8Y3K9XDQKQvjw3azzXqP2Onvq1S1o5sphg=";
+      hash = "sha256-3Ok/kaIW8u3Au0f6wA8D9bY5rRtjhv21lbU4PuJh9KQ=";
     };
 
-    cargoHash = "sha256-wNcntxShQgaqZWafrZ5roRQqTmhQobUdcvuW/o+mBXQ=";
+    cargoHash = "sha256-nF+Q+CwbrSWCPJIM669VvlAowt74vVcl7r/vtSzxnCM=";
 
     nativeBuildInputs = [ installShellFiles ];
 
