@@ -21,13 +21,13 @@ rustPlatform.buildRustPackage (
   in
   {
     pname = "evil-helix";
-    version = "unstable-20260726";
+    version = "unstable-20260727";
 
     src = fetchFromGitHub {
       owner = "pfrommerd";
       repo = "evil-helix";
-      rev = "45105db67ed121ab5c5ed6e8005fa25f473e0afe";
-      hash = "sha256-3Ok/kaIW8u3Au0f6wA8D9bY5rRtjhv21lbU4PuJh9KQ=";
+      rev = "4d9b9acdd0fc766af62f97daa6a0e4fd4b92df7a";
+      hash = "sha256-HPv639nxTy3/T/cvebynekKnFSG8bX6DRlF3bypHTkc=";
     };
 
     cargoHash = "sha256-nF+Q+CwbrSWCPJIM669VvlAowt74vVcl7r/vtSzxnCM=";
