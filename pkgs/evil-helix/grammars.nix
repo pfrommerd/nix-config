@@ -1,127 +1,75 @@
 {
   lib,
-  runCommand,
-  source,
+  cacert,
+  git,
+  jq,
+  python3,
   stdenv,
+  stdenvNoCC,
+  source,
+  # Hash of the fetched grammar sources. Changes whenever the pinned helix rev
+  # changes languages.toml; refresh it alongside src/cargoHash in default.nix.
+  grammarSourcesHash,
 }:
 
 let
-  languagesConfig = builtins.fromTOML (builtins.readFile "${source}/languages.toml");
+  # Fixed-output derivation: the one place with network access, and the reason
+  # nothing here needs to read languages.toml at evaluation time. See
+  # fetch-grammars.py for the output layout.
+  grammarSources = stdenvNoCC.mkDerivation {
+    name = "evil-helix-grammar-sources";
 
-  isGitGrammar =
-    grammar:
-    grammar ? source
-    && grammar.source ? git
-    && grammar.source ? rev;
+    nativeBuildInputs = [
+      cacert
+      git
+      python3
+    ];
 
-  isGitHubGrammar = grammar: lib.hasPrefix "https://github.com" grammar.source.git;
+    dontUnpack = true;
 
-  toGitHubFetcher =
-    url:
-    let
-      match = builtins.match "https://github\\.com/([^/]*)/([^/]*)/?" url;
-    in
-    {
-      owner = builtins.elemAt match 0;
-      repo = builtins.elemAt match 1;
-    };
+    buildPhase = ''
+      runHook preBuild
+      export HOME=$TMPDIR
+      python3 ${./fetch-grammars.py} ${source}/languages.toml $out
+      runHook postBuild
+    '';
 
-  useGrammar =
-    grammar:
-    if languagesConfig ? use-grammars.only then
-      builtins.elem grammar.name languagesConfig.use-grammars.only
-    else if languagesConfig ? use-grammars.except then
-      !(builtins.elem grammar.name languagesConfig.use-grammars.except)
-    else
-      true;
+    dontInstall = true;
+    dontFixup = true;
 
-  buildGrammar =
-    grammar:
-    let
-      github = toGitHubFetcher grammar.source.git;
-      gitSource = builtins.fetchTree {
-        type = "git";
-        url = grammar.source.git;
-        rev = grammar.source.rev;
-        ref = grammar.source.ref or "HEAD";
-        shallow = true;
-      };
-      githubSource = builtins.fetchTree {
-        type = "github";
-        inherit (github) owner repo;
-        inherit (grammar.source) rev;
-      };
-      grammarSource = if isGitHubGrammar grammar then githubSource else gitSource;
-    in
-    stdenv.mkDerivation {
-      pname = "evil-helix-tree-sitter-${grammar.name}";
-      version = grammar.source.rev;
+    # git shells out to curl, which wants the bundle named explicitly here --
+    # SSL_CERT_FILE alone is not enough.
+    SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+    GIT_SSL_CAINFO = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+    # Ignore any ambient user config so the checkouts stay reproducible.
+    GIT_CONFIG_GLOBAL = "/dev/null";
+    GIT_LFS_SKIP_SMUDGE = "1";
+    GIT_TERMINAL_PROMPT = "0";
 
-      src = grammarSource;
-      sourceRoot =
-        if grammar.source ? subpath then
-          "source/${grammar.source.subpath}"
-        else
-          "source";
+    impureEnvVars = lib.fetchers.proxyImpureEnvVars;
 
-      dontConfigure = true;
-
-      FLAGS = [
-        "-Isrc"
-        "-g"
-        "-O3"
-        "-fPIC"
-        "-fno-exceptions"
-        "-Wl,-z,relro,-z,now"
-      ];
-
-      grammarLibrary = grammar.name + stdenv.hostPlatform.extensions.sharedLibrary;
-
-      buildPhase = ''
-        runHook preBuild
-
-        if [[ -e src/scanner.cc ]]; then
-          $CXX -c src/scanner.cc -o scanner.o $FLAGS
-        elif [[ -e src/scanner.c ]]; then
-          $CC -c src/scanner.c -o scanner.o $FLAGS
-        fi
-
-        $CC -c src/parser.c -o parser.o $FLAGS
-        $CXX -shared -o $grammarLibrary *.o
-
-        runHook postBuild
-      '';
-
-      installPhase = ''
-        runHook preInstall
-
-        mkdir -p $out
-        mv $grammarLibrary $out/
-
-        runHook postInstall
-      '';
-
-      fixupPhase = lib.optionalString stdenv.hostPlatform.isLinux ''
-        runHook preFixup
-        $STRIP $out/$grammarLibrary
-        runHook postFixup
-      '';
-    };
-
-  grammarsToBuild = builtins.filter isGitGrammar (
-    builtins.filter useGrammar languagesConfig.grammar
-  );
-
-  grammarLinks = map (
-    grammar:
-    let
-      artifact = buildGrammar grammar;
-      library = grammar.name + stdenv.hostPlatform.extensions.sharedLibrary;
-    in
-    "ln -s ${artifact}/${library} $out/${library}"
-  ) grammarsToBuild;
+    outputHashAlgo = "sha256";
+    outputHashMode = "recursive";
+    outputHash = grammarSourcesHash;
+  };
 in
-runCommand "evil-helix-grammars" { } ''
-  mkdir -p $out
-  ${builtins.concatStringsSep "\n" grammarLinks}
-''
+stdenv.mkDerivation {
+  name = "evil-helix-grammars";
+
+  src = grammarSources;
+
+  nativeBuildInputs = [ jq ];
+
+  dontUnpack = true;
+  dontConfigure = true;
+  dontInstall = true;
+
+  libraryExtension = stdenv.hostPlatform.extensions.sharedLibrary;
+  stripLibraries = if stdenv.hostPlatform.isLinux then "1" else "0";
+
+  buildPhase = ''
+    runHook preBuild
+    source ${./build-grammars.sh}
+    runHook postBuild
+  '';
+}

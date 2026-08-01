@@ -12,6 +12,7 @@ rustPlatform.buildRustPackage (
   let
     grammars = callPackage ./grammars.nix {
       source = finalAttrs.src;
+      inherit (finalAttrs) grammarSourcesHash;
     };
     runtime = runCommand "evil-helix-runtime" { } ''
       cp -r --no-preserve=mode,ownership ${finalAttrs.src}/runtime $out
@@ -31,6 +32,9 @@ rustPlatform.buildRustPackage (
     };
 
     cargoHash = "sha256-DuJleibTFUkmLOf8lzfCHVwD2cWZkOXv9nLP9Ek0I0I=";
+
+    # Covers the tree-sitter grammars pinned by this rev's languages.toml.
+    grammarSourcesHash = "sha256-4T7GXCTQT6u3zp3vLPH7XK2cC29xdK1f13cnS9jIk4Q=";
 
     nativeBuildInputs = [ installShellFiles ];
 

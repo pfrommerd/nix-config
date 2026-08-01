@@ -25,7 +25,12 @@
       lib = nixpkgs.lib;
       configs = (import ./configs.nix);
 
-      platforms = lib.systems.flakeExposed;
+      # Only the systems this repo actually targets. Exposing all of
+      # lib.systems.flakeExposed meant `nix flake check --all-systems` had to
+      # evaluate packages.armv6l-linux.update and friends, where uv is broken.
+      platforms = lib.unique (
+        [ homeSystem ] ++ lib.mapAttrsToList (name: config: config.system) configs
+      );
       eachPlatform = lib.genAttrs platforms;
 
       attrValuesRecursive = set:

@@ -12,8 +12,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Pure evaluation of every system, so one cheap x86_64 runner covers them all
+  # and gates the expensive builds below.
+  check:
+    name: Check Nix Flake Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix flake check --no-build --all-systems
+
   build:
-    name: Check and build ${{ matrix.system }}
+    name: Build ${{ matrix.system }} CI packages
+    needs: check
     runs-on: ${{ matrix.runner }}
     env:
       # The secrets context can't be used in a step-level `if`, so hoist the
@@ -62,15 +77,6 @@ jobs:
           endpoint: ${{ secrets.ATTIC_ENDPOINT }}
           cache: ${{ secrets.ATTIC_CACHE }}
           token: ${{ secrets.ATTIC_TOKEN }}
-
-      # Checks this runner's own system only. `--all-systems` can't work here:
-      # pkgs/evil-helix/grammars.nix reads languages.toml out of the fetched
-      # source, and that import-from-derivation would need a foreign-system
-      # builder to realise. `--no-build` is off for the same reason -- it
-      # blocks the IFD fetch outright. Between the three runners every system
-      # in configs.nix still gets checked natively.
-      - name: Check flake
-        run: nix flake check --print-build-logs
 
       - name: Build CI packages
         run: nix build --print-build-logs .#packages.${{ matrix.system }}.ci
