@@ -21,16 +21,16 @@ rustPlatform.buildRustPackage (
   in
   {
     pname = "evil-helix";
-    version = "unstable-20260727";
+    version = "unstable-20260731";
 
     src = fetchFromGitHub {
       owner = "pfrommerd";
       repo = "evil-helix";
-      rev = "4d9b9acdd0fc766af62f97daa6a0e4fd4b92df7a";
-      hash = "sha256-HPv639nxTy3/T/cvebynekKnFSG8bX6DRlF3bypHTkc=";
+      rev = "08f3a70d82709fb8516d3a507bb9218dc6a6ad01";
+      hash = "sha256-qA5WSFCfyiCnGAAeXGIp/kfy9xPX74tULQN1S9m5Amo=";
     };
 
-    cargoHash = "sha256-nF+Q+CwbrSWCPJIM669VvlAowt74vVcl7r/vtSzxnCM=";
+    cargoHash = "sha256-DuJleibTFUkmLOf8lzfCHVwD2cWZkOXv9nLP9Ek0I0I=";
 
     nativeBuildInputs = [ installShellFiles ];
 
