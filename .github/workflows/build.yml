@@ -2,6 +2,15 @@ name: "Nix Flake CI"
 on:
   pull_request:
   push:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Check Nix Flake Status
@@ -14,3 +23,62 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - run: nix flake check --no-build --all-systems
+
+  build:
+    name: Build ${{ matrix.system }} CI packages
+    needs: check
+    runs-on: ${{ matrix.runner }}
+    env:
+      # The secrets context can't be used in a step-level `if`, so hoist the
+      # availability check into an env var the step can read.
+      HAS_ATTIC: ${{ secrets.ATTIC_ENDPOINT != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            system: x86_64-linux
+          - runner: ubuntu-24.04-arm
+            system: aarch64-linux
+          - runner: macos-15
+            system: aarch64-darwin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Reclaim runner disk space for the Nix store. Must run before Nix is
+      # installed, since it re-hosts /nix on the free space it carves out.
+      # Ubuntu-only; the macOS runners have ample space as-is.
+      - name: Nothing but Nix
+        if: runner.os == 'Linux'
+        uses: wimpysworld/nothing-but-nix@main
+        with:
+          hatchet-protocol: cleave
+          witness-carnage: true
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+            keep-going = true
+
+      # Pulls from the cache for this build, and pushes everything newly built
+      # to it in a post-job step. Skipped when the secrets are unavailable
+      # (e.g. pull requests from forks), so those runs still build cleanly.
+      - name: Setup Attic cache
+        if: env.HAS_ATTIC == 'true'
+        uses: ryanccn/attic-action@v0
+        with:
+          endpoint: ${{ secrets.ATTIC_ENDPOINT }}
+          cache: ${{ secrets.ATTIC_CACHE }}
+          token: ${{ secrets.ATTIC_TOKEN }}
+
+      - name: Build CI packages
+        run: nix build --print-build-logs .#packages.${{ matrix.system }}.ci
+
+      - name: Store size
+        if: always()
+        run: df -h /nix
