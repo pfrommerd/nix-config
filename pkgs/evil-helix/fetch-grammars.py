@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor
 
@@ -67,8 +68,32 @@ def repo_dir_name(url, rev):
     return f"{base}-{rev[:12]}"
 
 
+# `git fetch` otherwise forks a detached `gc --auto` that keeps writing into
+# .git after fetch returns, racing the prune below into "Directory not empty".
+NO_BACKGROUND_WORK = [
+    "-c",
+    "gc.auto=0",
+    "-c",
+    "maintenance.auto=false",
+    "-c",
+    "fetch.writeCommitGraph=false",
+]
+
+
 def git(*args, cwd=None):
-    subprocess.run(["git", *args], cwd=cwd, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(
+        ["git", *NO_BACKGROUND_WORK, *args],
+        cwd=cwd,
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+
+
+def prune(dest):
+    for root, dirs, _ in os.walk(dest, topdown=True):
+        for name in [d for d in dirs if d in PRUNE]:
+            shutil.rmtree(os.path.join(root, name))
+            dirs.remove(name)
 
 
 def fetch(url, rev, dest):
@@ -83,10 +108,17 @@ def fetch(url, rev, dest):
         git("fetch", "-q", "--tags", "origin", cwd=dest)
     git("checkout", "-q", "--detach", rev, cwd=dest)
 
-    for root, dirs, _ in os.walk(dest, topdown=True):
-        for pruned in [d for d in dirs if d in PRUNE]:
-            shutil.rmtree(os.path.join(root, pruned))
-            dirs.remove(pruned)
+    # Disabling auto-gc above should make the prune race-free, but a stray
+    # writer here would corrupt the fixed output hash rather than fail loudly,
+    # so retry before giving up.
+    for attempt in range(3):
+        try:
+            prune(dest)
+            return
+        except OSError:
+            if attempt == 2:
+                raise
+            time.sleep(1)
 
 
 def main():

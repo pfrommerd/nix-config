@@ -1,4 +1,5 @@
-{ stdenvNoCC,
+{ lib,
+  stdenvNoCC,
   fetchFromGitHub,
   fetchurl,
   python3,
@@ -33,6 +34,11 @@ in stdenvNoCC.mkDerivation {
     python3 ${widevine-installer}/widevine_fixup.py squashfs-root/WidevineCdm/_platform_specific/cros_arm64/libwidevinecdm.so $out/libwidevinecdm.so
     mv squashfs-root/WidevineCdm/manifest.json $out/
     mv squashfs-root/WidevineCdm/LICENSE $out/
-    patchelf --add-rpath ${nspr}/lib $out/libwidevinecdm.so 
+    patchelf --add-rpath ${nspr}/lib $out/libwidevinecdm.so
   '';
+
+  # Unpacks an ELF shared object and rewrites it with patchelf, neither of
+  # which works on darwin. Without this, CI picks the package up on every
+  # platform, since an absent meta.platforms reads as "available everywhere".
+  meta.platforms = lib.platforms.linux;
 }

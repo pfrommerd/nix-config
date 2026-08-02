@@ -25,6 +25,20 @@
       lib = nixpkgs.lib;
       configs = (import ./configs.nix);
 
+      overlay = import ./overlay.nix inputs;
+      # Names only, so this never forces a package that the platform can't
+      # evaluate. Applying the overlay to empty sets is safe for attrNames.
+      overlayPackageNames = builtins.attrNames (overlay { } { });
+      pkgsFor = platform: import nixpkgs {
+        system = platform;
+        config = {
+          allowUnfree = true;
+          allowUnsupportedSystem = true;
+          cudaSupport = true;
+        };
+        overlays = [ overlay ];
+      };
+
       # Only the systems this repo actually targets. Exposing all of
       # lib.systems.flakeExposed meant `nix flake check --all-systems` had to
       # evaluate packages.armv6l-linux.update and friends, where uv is broken.
@@ -50,15 +64,7 @@
       util = import ./util;
       mkHomeConfiguration = user: graphical:
         home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs {
-            system = homeSystem;
-            config = {
-              allowUnfree = true;
-              allowUnsupportedSystem = true;
-              cudaSupport = true;
-            };
-            overlays = [(import ./overlay.nix inputs)];
-          };
+          pkgs = pkgsFor homeSystem;
           extraSpecialArgs = {
             inherit inputs util;
             framework = "home-manager";
@@ -96,9 +102,16 @@
     # The jobsets
     packages = eachPlatform (platform:
       let
-        pkgs = nixpkgs.legacyPackages.${platform};
+        pkgs = pkgsFor platform;
         # get the coreutils packages
         bash = pkgs.bash;
+        # Every package overlay.nix adds, on every platform that supports it, so
+        # a broken package fails CI even when no host happens to pull it in.
+        # meta.platforms is what gates this, so a package that genuinely cannot
+        # build somewhere (widevine-cdm on darwin) has to say so in its meta.
+        overlayPackages = builtins.filter
+          (pkg: lib.meta.availableOn pkgs.stdenv.hostPlatform pkg)
+          (map (name: pkgs.${name}) overlayPackageNames);
         platformHosts = (lib.mapAttrs (name: host: mkSystem host)
           (lib.filterAttrs (name: config: config.system == platform) configs));
         # `nix run .#update` refreshes every pkgs/*/sources.json in the working
@@ -108,30 +121,21 @@
           runtimeInputs = [ pkgs.uv pkgs.nix pkgs.nix-prefetch-github pkgs.git ];
           text = builtins.readFile ./update.sh;
         };
-      in { inherit update; } // (if platformHosts == {} then {} else {
+      in {
+        inherit update;
         ci = derivation {
             name = "${platform}-ci";
             builder = "${bash}/bin/bash";
             args = [ "-c" "echo checked! > $out" ];
             system = platform;
-            inputs = attrValuesRecursive (lib.mapAttrs
+            inputs = overlayPackages ++ (attrValuesRecursive (lib.mapAttrs
                 (name: host: (host.config.distro or {}).ci or {})
                 platformHosts
-            );
+            ));
         };
-      })
+      }
     );
     # expose all of the packages from the nixpkgs
-    legacyPackages = eachPlatform (
-        platform: import nixpkgs {
-          system = platform;
-          config = {
-            allowUnfree = true;
-            allowUnsupportedSystem = true;
-            cudaSupport = true;
-          };
-	      overlays = [(import ./overlay.nix inputs)];
-        }
-      );
+    legacyPackages = eachPlatform pkgsFor;
   };
 }

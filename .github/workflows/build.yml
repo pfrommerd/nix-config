@@ -66,6 +66,12 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
             keep-going = true
+            # A binary cache that fails mid-download otherwise aborts the whole
+            # build, even for paths the runner could perfectly well build itself.
+            fallback = true
+            # Attic intermittently kills NAR downloads with "HTTP error 200
+            # (curl error: Stream error in the HTTP/2 framing layer)".
+            http2 = false
 
       # Pulls from the cache for this build, and pushes everything newly built
       # to it in a post-job step. Skipped when the secrets are unavailable
