@@ -22,8 +22,13 @@ in systemFunc  {
     inherit util;
   };
   modules = [
-    # First set up nix
+    # Agenix module and cli
+    (if isDarwin then agenix.darwinModules.default else agenix.nixosModules.default)
     {
+      age.secrets.nix-netrc.file = ./secrets/attic-netrc.age;
+    }
+    # First set up nix
+    ({config, ...}: {
       nixpkgs = {
         overlays = [(import ./overlay.nix inputs)];
         config.allowUnfree = true;
@@ -36,12 +41,13 @@ in systemFunc  {
           "git+https://github.com/"
           "git+ssh://github.com/"
         ];
+        settings.substituters = ["https://packages.pfrommer.dev/default"];
+        settings.trusted-public-keys = ["default:heutlqQBe82xcIMA03+dEtCYw0kvzQ1MCIJDX9EtABE="];
+        settings.netrc-file = config.age.secrets.nix-netrc.path;
         package = pkgs.nixVersions.latest;
         registry.self.flake = self;
       };
-    }
-    # Agenix module and cli
-    agenix.nixosModules.default
+    })
     {
       environment.systemPackages = [ agenix.packages.${system}.default ];
     }
