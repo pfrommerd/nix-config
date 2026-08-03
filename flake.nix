@@ -114,6 +114,17 @@
           (map (name: pkgs.${name}) overlayPackageNames);
         platformHosts = (lib.mapAttrs (name: host: mkSystem host)
           (lib.filterAttrs (name: config: config.system == platform) configs));
+        platformCi = lib.mapAttrs
+          (name: host:
+            let
+              hostCi = (host.config.distro or {}).ci or {};
+            in
+              if platform == "aarch64-linux" then
+                builtins.removeAttrs hostCi [ "machine" ]
+              else
+                hostCi
+          )
+          platformHosts;
         # `nix run .#update` refreshes every pkgs/*/sources.json in the working
         # tree by invoking each package's update.py (see ./update.sh).
         update = pkgs.writeShellApplication {
@@ -128,10 +139,7 @@
             builder = "${bash}/bin/bash";
             args = [ "-c" "echo checked! > $out" ];
             system = platform;
-            inputs = overlayPackages ++ (attrValuesRecursive (lib.mapAttrs
-                (name: host: (host.config.distro or {}).ci or {})
-                platformHosts
-            ));
+            inputs = overlayPackages ++ (attrValuesRecursive platformCi);
         };
       }
     );
