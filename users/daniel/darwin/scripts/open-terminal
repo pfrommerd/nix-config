@@ -1,5 +1,7 @@
 #!/usr/bin/env bash --login
 
-if ! alacritty msg create-window -e fish; then
-    alacritty -e fish & disown
+# Ghostty has no CLI new-window action on macOS; `open -na` would spawn a second
+# app instance, so drive the running one over AppleScript (ghostty >= 1.3).
+if ! osascript -e 'tell application "Ghostty" to new window'; then
+    open -a Ghostty
 fi

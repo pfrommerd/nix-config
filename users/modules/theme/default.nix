@@ -11,6 +11,7 @@ in
     ./cosmic-term.nix
     ./cosmic-comp.nix
     ./alacritty.nix
+    ./ghostty.nix
     ./helix.nix
   ];
   options.distro.theme = {
