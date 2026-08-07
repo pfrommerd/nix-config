@@ -17,8 +17,13 @@ let darwin-scripts = pkgs.stdenv.mkDerivation {
   mkBorderColor = alpha: "0x${alpha}${accentHex}";
 in {
   config = {
-	  environment.systemPackages = [ darwin-scripts pkgs.fish ];
+	  environment.systemPackages = [ darwin-scripts ];
           system.primaryUser = "daniel";
+	  # Installs fish and, more importantly, nix-darwin's fish env preinit
+	  # (/etc/fish/*), which sources system.build.setEnvironment. Without it a
+	  # fish login shell never gets /run/current-system/sw/bin on PATH (so no
+	  # darwin-rebuild), nor the system TERMINFO_DIRS/XDG_DATA_DIRS.
+	  programs.fish.enable = true;
 	  services.skhd.enable = true;
 	  services.skhd.package = pkgs.skhd.overrideAttrs (oldAttrs: {
 	    propagatedBuildInputs = [pkgs.dash];

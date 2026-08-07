@@ -1,0 +1,28 @@
+Match the real "Noto Sans Symbols 2" family name in the unix fallback list.
+
+The family name of Noto Sans Symbols 2 contains a space, but cosmic-text's unix
+fallback list only carries the unspaced "Noto Sans Symbols2" spelling. fontdb
+matches family names exactly, so that entry never resolves to the installed font.
+
+U+23FA (BLACK CIRCLE FOR RECORD, Claude Code's message/tool bullet) is a
+text-presentation symbol that lives in that family and is missing from the
+Noto/DejaVu families listed ahead of it, so without this it falls through to Noto
+Color Emoji and renders as a filled color block.
+
+The symbol fonts this reaches cover technical/text symbols but not pictographic
+emoji, so real emoji (e.g. U+1F534) still resolve to the color emoji font.
+
+--- a/src/font/fallback/unix.rs
++++ b/src/font/fallback/unix.rs
+@@ -42,6 +42,11 @@
+         /* Symbols fallbacks */
+         "Noto Sans Symbols",
+         "Noto Sans Symbols2",
++        // The Noto Sans Symbols 2 family name actually contains a space; the
++        // unspaced spelling above doesn't match it in fontdb. U+23FA (Claude
++        // Code's bullet) lives here, so without this it falls through to the
++        // color emoji font and renders as a filled block.
++        "Noto Sans Symbols 2",
+         /* Emoji fallbacks*/
+         "Noto Color Emoji",
+         //TODO: Add CJK script here for doublewides?

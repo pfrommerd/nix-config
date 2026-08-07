@@ -1,3 +1,5 @@
 #!/usr/bin/env bash --login
 
-cosmic-term
+if ! alacritty msg create-window -e fish; then
+    alacritty -e fish & disown
+fi

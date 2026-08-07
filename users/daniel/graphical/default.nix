@@ -23,19 +23,19 @@ in {
   };
 
   config = lib.mkIf config.graphical {
-    # DejaVu Sans Mono for Powerline is the cosmic-term font (see
-    # theme/cosmic-term.nix). Installed on every platform so the configured font
-    # always resolves; on macOS home-manager links it into ~/Library/Fonts where
-    # cosmic-term's fontdb can find it.
+    # DejaVu Sans Mono for Powerline is the configured terminal font on both
+    # platforms (see theme/cosmic-term.nix and theme/alacritty.nix). Installed
+    # everywhere so the family always resolves; on macOS home-manager links it
+    # into ~/Library/Fonts where alacritty's CoreText lookup finds it.
     #
     # noto-fonts provides Noto Sans Symbols 2, which covers monochrome
     # text-presentation symbols DejaVu lacks (notably U+23FA ⏺, Claude's
-    # message/tool bullet). cosmic-text's font fallback is patched on macOS (see
-    # overlay.nix) to prefer these symbol fonts ahead of the color emoji font,
-    # so the bullet renders monochrome instead of as a filled color block.
+    # message/tool bullet). On Linux cosmic-text's fallback list is patched to
+    # spell that family correctly (see pkgs/cosmic-term), so the bullet renders
+    # monochrome instead of as a filled color block.
     #
-    # freefont_ttf provides FreeMono, matching cosmic-text's Linux Braille
-    # fallback so spinner glyphs stay monospaced on macOS too.
+    # freefont_ttf provides FreeMono, cosmic-text's Braille fallback, so spinner
+    # glyphs stay monospaced.
     home.packages = with pkgs; [ powerline-fonts noto-fonts freefont_ttf ] ++ (if pkgs.stdenv.isLinux then [
       brightnessctl playerctl libinput-gestures
       pulseaudio pavucontrol
@@ -81,28 +81,18 @@ in {
         }
       ];
     };
-    # Terminal: cosmic-term everywhere (alacritty retired).
-    # On Linux it's enabled by the COSMIC desktop (see desktop.nix). On macOS
-    # there is no COSMIC desktop, so we enable cosmic-manager's declarative
-    # layer directly — this is lightweight (just lib.cosmic + the cosmic-term
-    # config applied via cosmic-ext-ctl at activation) and gives us the same
-    # themed terminal without pulling in the rest of COSMIC.
-    wayland.desktopManager.cosmic.enable = lib.mkIf isDarwin true;
-    programs.cosmic-term.enable = lib.mkIf isDarwin true;
-
-    # cosmic-manager applies config via `cosmic-ctl`, which resolves paths with
-    # etcetera's XDG base strategy: it defaults to ~/.config and only honours
-    # $XDG_CONFIG_HOME. On macOS the COSMIC apps themselves read their config
-    # from ~/Library/Application Support/cosmic, so without this the generated
-    # files land in ~/.config/cosmic where nothing reads them. Point cosmic-ctl
-    # at the macOS location for the cosmic activation steps. This export persists
-    # into the subsequent activation entries (home-manager runs them in one
-    # shell), so resetCosmic/configureCosmic both see it.
-    home.activation.cosmicMacosConfigHome = lib.mkIf isDarwin (
-      config.lib.dag.entryBefore
-        ([ "configureCosmic" ]
-          ++ lib.optional config.wayland.desktopManager.cosmic.resetFiles "resetCosmic")
-        ''export XDG_CONFIG_HOME="$HOME/Library/Application Support"''
-    );
+    # Terminal: cosmic-term on Linux (enabled by the COSMIC desktop, see
+    # desktop.nix), alacritty on macOS. cosmic-term is Linux-only upstream and
+    # the macOS port needed a pile of carried patches, so darwin uses alacritty
+    # instead. Colors/opacity/decorations/font family come from the theme module
+    # (see theme/alacritty.nix); the rest is set here.
+    programs.alacritty = {
+      enable = isDarwin;
+      settings = {
+        env = { TERM = "xterm-256color"; };
+        window.padding = { x = 4; y = 6; };
+        font.size = 15;
+      };
+    };
   };
 }

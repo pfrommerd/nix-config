@@ -13,17 +13,6 @@ final: prev: {
   cosmic-term = final.callPackage ./pkgs/cosmic-term {
     cosmic-term = prev.cosmic-term;
   };
-  # cosmic-ext-ctl applies cosmic-manager's declarative config at activation.
-  # It's a pure CLI and builds cleanly on macOS; only its meta marks it Linux.
-  cosmic-ext-ctl =
-    if prev.stdenv.hostPlatform.isDarwin then
-      prev.cosmic-ext-ctl.overrideAttrs (o: {
-        meta = o.meta // {
-          platforms = o.meta.platforms ++ [ "aarch64-darwin" ];
-        };
-      })
-    else prev.cosmic-ext-ctl;
-
   # patched widevine for aarch64
   widevine-cdm = (final.callPackage ./pkgs/widevine-cdm { });
 }

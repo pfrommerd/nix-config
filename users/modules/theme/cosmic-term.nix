@@ -53,8 +53,8 @@ in {
           syntax_theme_dark = cfg.dark.name;
           syntax_theme_light = cfg.light.name;
           # New terminals (including the first one at launch) open here. Without
-          # this cosmic-term inherits the launching process's cwd; on macOS it is
-          # spawned by skhd/launchd with cwd `/`, so terminals opened at `/`.
+          # this cosmic-term inherits the launching process's cwd, which for a
+          # terminal spawned from the desktop/compositor is not the home dir.
           working_directory = config.home.homeDirectory;
         }
       ];
@@ -63,8 +63,8 @@ in {
         (mkScheme cfg.light)
       ];
       settings = {
-        # Follow the system appearance so the dark/light syntax themes above
-        # switch automatically (macOS appearance, or the COSMIC theme on Linux).
+        # Follow the COSMIC theme so the dark/light syntax themes above switch
+        # automatically with the desktop appearance.
         app_theme = {
           __type = "enum";
           variant = "System";
