@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 {
-  imports = [ ../common.nix ../vllm.nix ];
+  imports = [ ../common.nix ];
   options = {
     distro.machines.kronos.enable = lib.mkEnableOption "kronos configuration";
   };
@@ -30,7 +30,6 @@
             }
             hosts {
                 100.96.208.99 kronos.ts.pfrommer.dev
-                100.96.208.99 vllm-lite.ts.pfrommer.dev
                 100.96.208.99 chat.ts.pfrommer.dev
                 fallthrough
             }
@@ -39,21 +38,28 @@
         }
       '';
     };
-    services.open-webui = {
+    services.llama-cpp = {
       enable = true;
-      port = 11435;
-      environment = {
-        # OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+      package = pkgs.llama-cpp.override { cudaSupport = true; };
+      settings = {
+        host = "127.0.0.1";
+        port = 11435;
+        hf-repo = "unsloth/Qwen3.8-27B-GGUF:Q4_K_M";
+        alias = "Qwen3.8-27B";
+        no-mmproj = true;
+        ctx-size = 65536;
+        parallel = 1;
+        gpu-layers = "all";
+        fit = "off";
+        sleep-idle-seconds = 300;
+        flash-attn = "on";
+        cache-type-k = "q8_0";
+        cache-type-v = "q8_0";
+        spec-type = "draft-mtp";
+        spec-draft-n-max = 2;
       };
     };
-    services.vllm = {
-      enable = false;
-      cudaSupport = true;
-      port = 11434;
-      model = "Qwen/Qwen2.5-7B-Instruct";
-    };
     distro.common.proxy = {
-      "vllm-lite.ts.pfrommer.dev" = "localhost:11434";
       "chat.ts.pfrommer.dev" = "localhost:11435";
     };
     # disable resolved so we can run coredns

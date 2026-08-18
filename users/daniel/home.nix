@@ -29,7 +29,7 @@
       texliveFull typst
       # agentic tooling
       tmux cursor-cli
-    ] ++ lib.optionals (!config.restricted) [ opencode codex claude-code ]; # fmt: skip
+    ] ++ lib.optionals (!config.restricted) [ codex claude-code ]; # fmt: skip
 
     home.sessionVariables = {
       EDITOR = "hx";
@@ -66,6 +66,32 @@
     programs.helix = {
       enable = true;
       package = pkgs.evil-helix;
+    };
+    programs.opencode = {
+      enable = !config.restricted;
+      package = pkgs.opencode;
+      settings = {
+        model = "llama-cpp/Qwen3.8-27B";
+        provider.llama-cpp = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "Kronos";
+          options.baseURL = "https://chat.ts.pfrommer.dev/v1";
+          models."Qwen3.8-27B" = {
+            name = "Qwen3.8 27B Q4_K_M";
+            reasoning = true;
+            tool_call = true;
+            interleaved.field = "reasoning_content";
+            limit = {
+              context = 65536;
+              output = 16384;
+            };
+            modalities = {
+              input = [ "text" ];
+              output = [ "text" ];
+            };
+          };
+        };
+      };
     };
     programs.fish.enable = true;
     programs.zellij.enable = true;
