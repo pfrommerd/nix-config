@@ -95,6 +95,10 @@ in
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
+      # rclone invokes fusermount3 through PATH. On NixOS it must find the
+      # setuid wrapper rather than the unprivileged binary in the Nix store.
+      enableDefaultPath = false;
+      environment.PATH = config.security.wrapperDir;
       serviceConfig = {
         Type = "notify";
         User = cfg.user;

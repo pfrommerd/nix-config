@@ -3,6 +3,8 @@
   imports = [
     # our user-specific graphical options
     ./graphical
+    # custom program modules
+    ../modules/ncdu.nix
     # the custom theming module
     ../modules/theme
   ];
@@ -94,6 +96,7 @@
       };
     };
     programs.fish.enable = true;
+    programs.ncdu.enable = true;
     programs.zellij.enable = true;
     programs.zellij.settings.show_startup_tips = false;
 
