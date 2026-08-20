@@ -10,6 +10,8 @@
   config = let
     cfg = config.distro.machines.kronos;
     forgejoDomain = "forgejo.ts.pfrommer.dev";
+    forgejoExe = lib.getExe config.services.forgejo.package;
+    forgejoConfig = "${config.services.forgejo.customDir}/conf/app.ini";
   in lib.mkIf cfg.enable {
     hardware.nvidia-container-toolkit.enable = true;
     virtualisation.docker.enable = true;
@@ -83,6 +85,45 @@
         };
         service.DISABLE_REGISTRATION = true;
         session.COOKIE_SECURE = true;
+      };
+    };
+    age.secrets.forgejo-admin-password = {
+      file = ../../secrets/forgejo-admin-password.age;
+      owner = config.services.forgejo.user;
+      group = config.services.forgejo.group;
+    };
+    systemd.services.forgejo-bootstrap-admin = {
+      description = "Create the initial Forgejo administrator";
+      requires = [ "forgejo.service" ];
+      after = [ "forgejo.service" ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [ config.age.secrets.forgejo-admin-password.file ];
+      script = ''
+        if ${forgejoExe} admin user list \
+          --config ${lib.escapeShellArg forgejoConfig} \
+          --work-path ${lib.escapeShellArg config.services.forgejo.stateDir} \
+          | ${pkgs.gnugrep}/bin/grep -Eq '^[[:space:]]*[0-9]+[[:space:]]+pfrommerd([[:space:]]|$)'; then
+          exit 0
+        fi
+
+        password="$(<${config.age.secrets.forgejo-admin-password.path})"
+        ${forgejoExe} admin user create \
+          --config ${lib.escapeShellArg forgejoConfig} \
+          --work-path ${lib.escapeShellArg config.services.forgejo.stateDir} \
+          --username pfrommerd \
+          --email dan.pfrommer@gmail.com \
+          --password "$password" \
+          --admin \
+          --must-change-password=false
+        unset password
+      '';
+      serviceConfig = {
+        Type = "oneshot";
+        User = config.services.forgejo.user;
+        Group = config.services.forgejo.group;
+        WorkingDirectory = config.services.forgejo.stateDir;
+        RemainAfterExit = true;
+        UMask = "0077";
       };
     };
     distro.common.proxy = {
