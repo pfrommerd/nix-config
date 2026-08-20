@@ -1,0 +1,97 @@
+name: Nix Flake CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ forgejo.workflow }}-${{ forgejo.ref }}
+  cancel-in-progress: true
+
+env:
+  NIX_CONFIG: |
+    experimental-features = nix-command flakes
+    accept-flake-config = true
+    keep-going = true
+    fallback = true
+    http2 = false
+
+jobs:
+  check:
+    name: Check Nix Flake Status
+    runs-on: x86_64-linux
+    steps:
+      - name: Checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          auth="$(printf 'x-access-token:%s' "$FORGEJO_TOKEN" | base64 -w0)"
+          git -c "http.extraHeader=Authorization: Basic $auth" \
+            fetch --no-tags --depth=1 origin "$FORGEJO_SHA"
+          unset auth
+          git checkout --detach FETCH_HEAD
+      - name: Evaluate flake
+        run: nix flake check --no-build
+
+  build:
+    name: Build ${{ matrix.system }} CI packages
+    needs: check
+    runs-on: ${{ matrix.system }}
+    env:
+      HAS_ATTIC: ${{ secrets.ATTIC_ENDPOINT != '' }}
+      ATTIC_ENDPOINT: ${{ secrets.ATTIC_ENDPOINT }}
+      ATTIC_CACHE: ${{ secrets.ATTIC_CACHE }}
+      ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        system:
+          - x86_64-linux
+          - aarch64-linux
+    steps:
+      - name: Checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          auth="$(printf 'x-access-token:%s' "$FORGEJO_TOKEN" | base64 -w0)"
+          git -c "http.extraHeader=Authorization: Basic $auth" \
+            fetch --no-tags --depth=1 origin "$FORGEJO_SHA"
+          unset auth
+          git checkout --detach FETCH_HEAD
+
+      - name: Build CI packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          attic_pid=
+          stop_attic() {
+            if test -n "$attic_pid"; then
+              kill -INT "$attic_pid" 2>/dev/null || true
+              wait "$attic_pid" || true
+              attic_pid=
+            fi
+          }
+          trap stop_attic EXIT
+
+          if test "$HAS_ATTIC" = true; then
+            attic login ci "$ATTIC_ENDPOINT" "$ATTIC_TOKEN"
+            attic use "ci:$ATTIC_CACHE"
+            attic watch-store "ci:$ATTIC_CACHE" &
+            attic_pid=$!
+          fi
+
+          nix build --print-build-logs ".#packages.${{ matrix.system }}.ci"
+          stop_attic
+
+      - name: Store size
+        if: always()
+        run: df -h /nix

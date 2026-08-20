@@ -9,6 +9,7 @@ in {
    "root-key.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
    "root-crt.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
    "forgejo-admin-password.age" = { publicKeys = [daniel kronos]; };
+   "forgejo-runner-token.age" = { publicKeys = [daniel kronos]; };
    "rclone-gdrive.age" = { publicKeys = [daniel kronos]; };
    "daniel-hf-token.age" = { publicKeys = [ daniel kronos asahi engaging ececheira]; };
    "attic-netrc.age" = { publicKeys = [daniel kronos asahi ececheira athena]; };

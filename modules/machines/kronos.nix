@@ -2,6 +2,7 @@
 {
   imports = [
     ../common.nix
+    ../services/forgejo-runner.nix
     ../services/gdrive.nix
   ];
   options = {
@@ -13,6 +14,8 @@
     forgejoExe = lib.getExe config.services.forgejo.package;
     forgejoConfig = "${config.services.forgejo.customDir}/conf/app.ini";
   in lib.mkIf cfg.enable {
+    boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
     hardware.nvidia-container-toolkit.enable = true;
     virtualisation.docker.enable = true;
     virtualisation.docker.daemon.settings = {
@@ -29,6 +32,11 @@
         encryptedConfigFile = ../../secrets/rclone-gdrive.age;
         user = "daniel";
         group = "users";
+      };
+      services.forgejo-runner = {
+        enable = true;
+        tokenFile = config.age.secrets.forgejo-runner-token.path;
+        tokenRestartTriggers = [ config.age.secrets.forgejo-runner-token.file ];
       };
     };
 
@@ -92,6 +100,7 @@
       owner = config.services.forgejo.user;
       group = config.services.forgejo.group;
     };
+    age.secrets.forgejo-runner-token.file = ../../secrets/forgejo-runner-token.age;
     systemd.services.forgejo-bootstrap-admin = {
       description = "Create the initial Forgejo administrator";
       requires = [ "forgejo.service" ];
