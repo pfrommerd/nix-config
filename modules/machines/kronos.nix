@@ -1,11 +1,15 @@
 { config, lib, pkgs, ... }:
 {
-  imports = [ ../common.nix ];
+  imports = [
+    ../common.nix
+    ../services/gdrive.nix
+  ];
   options = {
     distro.machines.kronos.enable = lib.mkEnableOption "kronos configuration";
   };
   config = let
     cfg = config.distro.machines.kronos;
+    forgejoDomain = "forgejo.ts.pfrommer.dev";
   in lib.mkIf cfg.enable {
     hardware.nvidia-container-toolkit.enable = true;
     virtualisation.docker.enable = true;
@@ -18,6 +22,12 @@
     distro = {
       common.enable = true;
       ci = {};
+      services.gdrive = {
+        enable = true;
+        encryptedConfigFile = ../../secrets/rclone-gdrive.age;
+        user = "daniel";
+        group = "users";
+      };
     };
 
     # tailscale-enabled DNS server
@@ -31,6 +41,7 @@
             hosts {
                 100.96.208.99 kronos.ts.pfrommer.dev
                 100.96.208.99 chat.ts.pfrommer.dev
+                100.96.208.99 ${forgejoDomain}
                 fallthrough
             }
             log
@@ -59,8 +70,24 @@
         spec-draft-n-max = 2;
       };
     };
+
+    services.forgejo = {
+      enable = true;
+      settings = {
+        server = {
+          DOMAIN = forgejoDomain;
+          ROOT_URL = "https://${forgejoDomain}/";
+          HTTP_ADDR = "127.0.0.1";
+          HTTP_PORT = 3000;
+          SSH_DOMAIN = forgejoDomain;
+        };
+        service.DISABLE_REGISTRATION = true;
+        session.COOKIE_SECURE = true;
+      };
+    };
     distro.common.proxy = {
       "chat.ts.pfrommer.dev" = "localhost:11435";
+      "${forgejoDomain}" = "localhost:3000";
     };
     # disable resolved so we can run coredns
     services.resolved.enable = false;

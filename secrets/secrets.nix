@@ -8,6 +8,7 @@ in {
    "daniel-passwd.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
    "root-key.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
    "root-crt.age" = { publicKeys = [daniel kronos asahi ececheira ]; };
+   "rclone-gdrive.age" = { publicKeys = [daniel kronos]; };
    "daniel-hf-token.age" = { publicKeys = [ daniel kronos asahi engaging ececheira]; };
    "attic-netrc.age" = { publicKeys = [daniel kronos asahi ececheira athena]; };
 }
